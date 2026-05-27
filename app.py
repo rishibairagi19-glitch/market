@@ -4,6 +4,7 @@ from werkzeug.utils import secure_filename
 import os
 import io
 import random
+import traceback
 from PIL import Image
 from dotenv import load_dotenv
 
@@ -18,6 +19,12 @@ app.secret_key = "my_super_secret_key"
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+
+# Vercel पर 500 Error को स्क्रीन पर विस्तार से दिखाने के लिए
+@app.errorhandler(Exception)
+def handle_exception(e):
+    error_trace = traceback.format_exc()
+    return f"<h2 style='color:red;'>Application Error (500)</h2><p>कृपया इस एरर को कॉपी करें और मुझे बताएं:</p><pre style='background:#f4f4f4; padding:15px; border:1px solid #ddd; overflow-x:auto;'>{error_trace}</pre>", 500
 
 @app.route("/logout")
 def logout():
