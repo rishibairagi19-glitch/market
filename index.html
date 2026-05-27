@@ -681,8 +681,8 @@
         </div>
     </div>
 
-    <h2 class="lang-text" data-hi="{{ session['shop_name'] }} का डैशबोर्ड" data-en="{{ session['shop_name'] }}'s Dashboard">{{ session['shop_name'] }} का डैशबोर्ड</h2>
-    <p style="text-align: center; color: #7f8c8d; margin-top: -15px; font-size: 14px;"><span class="lang-text" data-hi="शॉप ID:" data-en="Shop ID:">शॉप ID:</span> <b>{{ session['shop_id'] }}</b></p>
+    <h2 class="lang-text" data-hi="{{ session.get('shop_name', '') }} का डैशबोर्ड" data-en="{{ session.get('shop_name', '') }}'s Dashboard">{{ session.get('shop_name', '') }} का डैशबोर्ड</h2>
+    <p style="text-align: center; color: #7f8c8d; margin-top: -15px; font-size: 14px;"><span class="lang-text" data-hi="शॉप ID:" data-en="Shop ID:">शॉप ID:</span> <b>{{ session.get('shop_id', '') }}</b></p>
     
     <div id="add_product_tab" {% if active_admin_tab != 'add_product_tab' %}style="display: none;"{% endif %}>
     <div class="add-product-card">
@@ -739,7 +739,7 @@
         </form>
     </div>
     <div style="text-align: center; margin-top: 15px;">
-        <a href="/shop/{{ session['shop_name'] }}" target="_blank" style="color: #3498db; text-decoration: none;" class="lang-text" data-hi="अपनी पब्लिक शॉप देखें 👁️" data-en="View your public shop 👁️">अपनी पब्लिक शॉप देखें 👁️</a>
+        <a href="/shop/{{ session.get('shop_name', '') }}" target="_blank" style="color: #3498db; text-decoration: none;" class="lang-text" data-hi="अपनी पब्लिक शॉप देखें 👁️" data-en="View your public shop 👁️">अपनी पब्लिक शॉप देखें 👁️</a>
     </div>
     
     <script>
@@ -783,13 +783,13 @@
             </div>
             
             <div class="profile-body">
-                <h2 class="profile-name">{{ user_profile.owner_name }}</h2>
-                <div class="profile-id"><span class="lang-text" data-hi="शॉप ID:" data-en="Shop ID:">शॉप ID:</span> <strong>{{ session['shop_id'] }}</strong></div>
+                <h2 class="profile-name">{{ user_profile.owner_name|default('Shop Owner') }}</h2>
+                <div class="profile-id"><span class="lang-text" data-hi="शॉप ID:" data-en="Shop ID:">शॉप ID:</span> <strong>{{ session.get('shop_id', '') }}</strong></div>
                 
                 <div class="profile-stats-grid">
                     <div class="stat-box">
                         <div class="stat-label lang-text" data-hi="दुकान का नाम" data-en="Shop Name">दुकान का नाम</div>
-                        <div class="stat-value">{{ session['shop_name'] }}</div>
+                        <div class="stat-value">{{ session.get('shop_name', '') }}</div>
                     </div>
                     <div class="stat-box">
                         <div class="stat-label lang-text" data-hi="मोबाइल नंबर" data-en="Mobile Number">मोबाइल नंबर</div>
@@ -819,8 +819,8 @@
                 <div style="font-size: 30px; margin-bottom: 10px;">🔗</div>
                 <h4 style="margin-top: 0; color: #2c3e50;" class="lang-text" data-hi="दुकान का लिंक" data-en="Shop Link">दुकान का लिंक</h4>
                 <p style="font-size: 13px; color: #7f8c8d;" class="lang-text" data-hi="ग्राहकों के साथ शेयर करें" data-en="Share with customers">ग्राहकों के साथ शेयर करें</p>
-                <input type="text" value="{{ request.host_url }}shop/{{ session['shop_name'] }}" readonly style="width: 100%; text-align: center; background: #f4f7f6; margin-bottom: 15px; border: 1px dashed #ccc; padding: 8px; font-size: 12px; color: #555;">
-                <a href="/shop/{{ session['shop_name'] }}" target="_blank" style="display: inline-block; background: #3498db; color: white; padding: 8px 15px; text-decoration: none; border-radius: 5px; font-size: 14px; font-weight: bold; width: auto;" class="lang-text" data-hi="दुकान खोलें" data-en="Open Shop">दुकान खोलें</a>
+                <input type="text" value="{{ request.host_url }}shop/{{ session.get('shop_name', '') }}" readonly style="width: 100%; text-align: center; background: #f4f7f6; margin-bottom: 15px; border: 1px dashed #ccc; padding: 8px; font-size: 12px; color: #555;">
+                <a href="/shop/{{ session.get('shop_name', '') }}" target="_blank" style="display: inline-block; background: #3498db; color: white; padding: 8px 15px; text-decoration: none; border-radius: 5px; font-size: 14px; font-weight: bold; width: auto;" class="lang-text" data-hi="दुकान खोलें" data-en="Open Shop">दुकान खोलें</a>
             </div>
 
             <!-- QR कोड कार्ड -->
