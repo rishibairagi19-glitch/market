@@ -826,9 +826,9 @@
             <!-- QR कोड कार्ड -->
             <div style="flex: 1; min-width: 200px; background: #fff; border: 1px solid #e1e8ed; border-radius: 10px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); text-align: center;">
                 <h4 style="margin-top: 0; color: #2c3e50;" class="lang-text" data-hi="📱 QR कोड" data-en="📱 QR Code">📱 QR कोड</h4>
-                <img src="/static/qr_codes/{{ qr_filename }}" alt="Shop QR Code" style="width: 100px; border: 1px solid #eee; border-radius: 8px; padding: 5px; background: white; margin-bottom: 10px;">
+                <img src="{{ qr_url }}" alt="Shop QR Code" style="width: 100px; border: 1px solid #eee; border-radius: 8px; padding: 5px; background: white; margin-bottom: 10px;">
                 <br>
-                <a href="/static/qr_codes/{{ qr_filename }}" download="QR_{{ session['shop_name'] }}.png" style="display: inline-block; background: #27ae60; color: white; padding: 8px 15px; text-decoration: none; border-radius: 5px; font-size: 14px; font-weight: bold; width: auto;" class="lang-text" data-hi="⬇️ डाउनलोड करें" data-en="⬇️ Download">⬇️ डाउनलोड करें</a>
+                <a href="{{ qr_url }}" target="_blank" style="display: inline-block; background: #27ae60; color: white; padding: 8px 15px; text-decoration: none; border-radius: 5px; font-size: 14px; font-weight: bold; width: auto;" class="lang-text" data-hi="⬇️ डाउनलोड करें" data-en="⬇️ Download">⬇️ डाउनलोड करें</a>
             </div>
         </div>
     </div>
