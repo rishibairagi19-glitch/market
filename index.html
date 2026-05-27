@@ -182,15 +182,6 @@
         
         .add-to-cart-btn { background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%); color: white; text-align: center; padding: 12px; border-radius: 12px; font-size: 16px; font-weight: bold; border: none; cursor: pointer; margin-top: 10px; width: 100%; box-shadow: 0 4px 15px rgba(221, 107, 32, 0.3); transition: all 0.3s; }
         .add-to-cart-btn:hover { background: linear-gradient(135deg, #dd6b20 0%, #c05621 100%); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(221, 107, 32, 0.4); }
-        
-        /* Profile Dropdown Menu CSS */
-        .profile-menu { position: absolute; top: 20px; right: 20px; display: inline-block; }
-        .profile-btn { background: #ecf0f1; color: #2c3e50; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-weight: bold; border: 1px solid #bdc3c7; font-size: 14px; margin-top: 0; width: auto; }
-        .profile-btn:hover { background: #e0e6ed; }
-        .dropdown-content { display: none; position: absolute; right: 0; top: 100%; background-color: #fff; min-width: 180px; box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2); z-index: 100; border-radius: 5px; overflow: hidden; border: 1px solid #eee; margin-top: 5px; }
-        .dropdown-content a { color: #333; padding: 12px 16px; text-decoration: none; display: block; border-bottom: 1px solid #eee; font-size: 14px; cursor: pointer; text-align: left; }
-        .dropdown-content a:hover { background-color: #f9f9f9; color: #27ae60; }
-        .show-dropdown { display: block !important; }
     </style>
 </head>
 <body>
@@ -249,7 +240,7 @@
                  
                 {% if images %}
                 {% set first_img = images[0].replace('\\', '/') %}
-                <img src="{% if first_img.startswith('http') %}{{ first_img }}{% else %}/{{ first_img }}{% endif %}" alt="{{ p.product }}" loading="lazy">
+                <img src="{% if first_img.startswith('http') %}{{ first_img }}{% else %}/{{ first_img }}{% endif %}" alt="{{ p.product }}" loading="lazy" decoding="async">
                 {% endif %}
                 <div class="card-content">
                     <div class="card-title"><span style="font-size: 12px; color: #aaa; float: right;">#{{ p.product_id }}</span>{{ p.product }}</div>
@@ -629,7 +620,7 @@
     </script>
     {% else %}
     <!-- दुकानदार व्यू (Admin View) -->
-    <div class="container" style="max-width: 600px; position: relative;">
+    <div class="container" style="max-width: 600px; position: relative; padding-bottom: 80px;">
     {% if error %}
         <div class="alert alert-error">{{ error | safe }}</div>
     {% endif %}
@@ -638,21 +629,6 @@
     {% endif %}
 
     {% if session.get('shop_name') %}
-    <div class="profile-menu">
-        <button class="profile-btn" onclick="toggleProfileMenu(event)">⚙️ मेनू ▼</button>
-        <div class="dropdown-content" id="profileDropdown">
-            <a onclick="showTab('add_product_tab')" class="lang-text" data-hi="➕ नया प्रोडक्ट जोड़ें" data-en="➕ Add New Product">➕ नया प्रोडक्ट जोड़ें</a>
-            <a onclick="showTab('manage_products_tab')" class="lang-text" data-hi="📦 मैनेज प्रोडक्ट्स" data-en="📦 Manage Products">📦 मैनेज प्रोडक्ट्स</a>
-            <a onclick="showTab('orders_tab')" class="lang-text" data-hi="📋 मेरे ऑर्डर्स" data-en="📋 My Orders">📋 मेरे ऑर्डर्स</a>
-            <a onclick="showTab('profile_tab')" class="lang-text" data-hi="👤 मेरी प्रोफाइल" data-en="👤 My Profile">👤 मेरी प्रोफाइल</a>
-            <hr style="margin: 5px 0; border: 0; border-top: 1px solid #334155;">
-            <div style="padding: 5px 15px; font-size: 11px; color: #94a3b8; font-weight: bold; text-transform: uppercase;">⚙️ Settings</div>
-            <a onclick="toggleDarkMode()" id="darkModeBtn">🌙 डार्क मोड / Dark Mode</a>
-            <a onclick="toggleLanguage()" id="langBtn">🌐 English / हिन्दी</a>
-            <hr style="margin: 5px 0; border: 0; border-top: 1px solid #334155;">
-            <a href="/logout" onclick="document.getElementById('global-loader').style.display='flex';" style="color: #e74c3c;" class="lang-text" data-hi="🚪 लॉगआउट करें" data-en="🚪 Logout">🚪 लॉगआउट करें</a>
-        </div>
-    </div>
 
     <h2 class="lang-text" data-hi="{{ session.get('shop_name', '') }} का डैशबोर्ड" data-en="{{ session.get('shop_name', '') }}'s Dashboard">{{ session.get('shop_name', '') }} का डैशबोर्ड</h2>
     <p style="text-align: center; color: #7f8c8d; margin-top: -15px; font-size: 14px;"><span class="lang-text" data-hi="शॉप ID:" data-en="Shop ID:">शॉप ID:</span> <b>{{ session.get('shop_id', '') }}</b></p>
@@ -804,6 +780,27 @@
                 <a href="{{ qr_url }}" target="_blank" style="display: inline-block; background: #27ae60; color: white; padding: 8px 15px; text-decoration: none; border-radius: 5px; font-size: 14px; font-weight: bold; width: auto;" class="lang-text" data-hi="⬇️ डाउनलोड करें" data-en="⬇️ Download">⬇️ डाउनलोड करें</a>
             </div>
         </div>
+
+        <!-- Settings Section -->
+        <div class="settings-card">
+            <h3 style="margin-top: 0; color: #1a202c; font-size: 18px; border-bottom: 2px solid #edf2f7; padding-bottom: 10px;" class="lang-text" data-hi="⚙️ अन्य सेटिंग्स" data-en="⚙️ Other Settings">⚙️ अन्य सेटिंग्स</h3>
+            <div class="settings-item" onclick="toggleDarkMode()">
+                <span id="darkModeBtnList">🌙 डार्क मोड (Dark Mode)</span>
+                <span>▶</span>
+            </div>
+            <div class="settings-item" onclick="toggleLanguage()">
+                <span id="langBtnList">🌐 English / हिन्दी</span>
+                <span>▶</span>
+            </div>
+            <div class="settings-item" onclick="contactSupport()">
+                <span class="lang-text" data-hi="❓ सहायता (Need Help?)" data-en="❓ Need Help?">❓ सहायता (Need Help?)</span>
+                <span>▶</span>
+            </div>
+            <a href="/logout" onclick="document.getElementById('global-loader').style.display='flex';" class="settings-item" style="color: #e53e3e;">
+                <span class="lang-text" data-hi="🚪 लॉगआउट (Logout)" data-en="🚪 Logout">🚪 लॉगआउट (Logout)</span>
+                <span>▶</span>
+            </a>
+        </div>
     </div>
 
     <div id="manage_products_tab" {% if active_admin_tab != 'manage_products_tab' %}style="display: none;"{% endif %}>
@@ -817,7 +814,7 @@
             <div class="manage-product-card">
                 {% if p.image_url %}
                 {% set manage_img = p.image_url.split(',')[0].replace('\\', '/') %}
-                <img src="{% if manage_img.startswith('http') %}{{ manage_img }}{% else %}/{{ manage_img }}{% endif %}" class="manage-product-img" loading="lazy">
+                <img src="{% if manage_img.startswith('http') %}{{ manage_img }}{% else %}/{{ manage_img }}{% endif %}" class="manage-product-img" loading="lazy" decoding="async">
                 {% else %}
                 <div class="manage-product-img" style="background: #edf2f7; display: flex; align-items: center; justify-content: center; font-size: 30px;">🛍️</div>
                 {% endif %}
@@ -985,16 +982,26 @@
     </div>
 
     <script>
-        function showTab(tabName) {
+        function showTab(tabName, element) {
             document.getElementById('add_product_tab').style.display = 'none';
             document.getElementById('profile_tab').style.display = 'none';
             document.getElementById('manage_products_tab').style.display = 'none';
             document.getElementById('orders_tab').style.display = 'none';
             document.getElementById(tabName).style.display = 'block';
             
-            // ड्रॉपडाउन मेनू को क्लिक करते ही तुरंत बंद करने के लिए (ताकि टैब स्विच फास्ट लगे)
-            const dropdown = document.getElementById('profileDropdown');
-            if(dropdown) dropdown.classList.remove('show-dropdown');
+            // Bottom Nav Active State
+            if (element) {
+                document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+                element.classList.add('active');
+            } else {
+                document.querySelectorAll('.nav-item').forEach(el => {
+                    if (el.getAttribute('onclick').includes(tabName)) {
+                        el.classList.add('active');
+                    } else {
+                        el.classList.remove('active');
+                    }
+                });
+            }
         }
         
         function openEditModal(id, name, price, size, quantity, category) {
@@ -1032,11 +1039,6 @@
         }
         function closeEditProfileModal() {
             document.getElementById('editProfileModal').style.display = 'none';
-        }
-        
-        function toggleProfileMenu(event) {
-            document.getElementById("profileDropdown").classList.toggle("show-dropdown");
-            if(event) event.stopPropagation();
         }
         
         let cropper;
@@ -1083,19 +1085,39 @@
             if (!cropper) return;
             const canvas = cropper.getCroppedCanvas({ width: 300, height: 300 });
             
-            // इमेज को JPEG में बदलें और 70% क्वालिटी पर कंप्रेस करें (ताकि अपलोड बहुत फास्ट हो)
+            // इमेज को WebP में बदलें और कंप्रेस करें (JPEG से 50% अधिक फास्ट)
             canvas.toBlob(function(blob) {
-                const newFileName = originalFile.name.replace(/\.[^/.]+$/, "") + ".jpg";
-                const croppedFile = new File([blob], newFileName, { type: 'image/jpeg' });
+                const newFileName = originalFile.name.replace(/\.[^/.]+$/, "") + ".webp";
+                const croppedFile = new File([blob], newFileName, { type: 'image/webp' });
                 const dataTransfer = new DataTransfer();
                 dataTransfer.items.add(croppedFile);
                 document.getElementById('profile_pic_input').files = dataTransfer.files; // कटी हुई फोटो को फॉर्म में डाल दें
                 
                 document.getElementById('cropModal').style.display = 'none';
                 if (cropper) { cropper.destroy(); cropper = null; }
-            }, 'image/jpeg', 0.7);
+            }, 'image/webp', 0.7);
         }
     </script>
+
+    <!-- Bottom Navigation Bar (Modern App Style) -->
+    <div class="bottom-nav">
+        <div class="nav-item {% if active_admin_tab == 'add_product_tab' %}active{% endif %}" onclick="showTab('add_product_tab', this)">
+            <div class="nav-icon">➕</div>
+            <span class="lang-text" data-hi="नया" data-en="New">नया</span>
+        </div>
+        <div class="nav-item {% if active_admin_tab == 'manage_products_tab' %}active{% endif %}" onclick="showTab('manage_products_tab', this)">
+            <div class="nav-icon">📦</div>
+            <span class="lang-text" data-hi="प्रोडक्ट्स" data-en="Products">प्रोडक्ट्स</span>
+        </div>
+        <div class="nav-item {% if active_admin_tab == 'orders_tab' %}active{% endif %}" onclick="showTab('orders_tab', this)">
+            <div class="nav-icon">📋</div>
+            <span class="lang-text" data-hi="ऑर्डर्स" data-en="Orders">ऑर्डर्स</span>
+        </div>
+        <div class="nav-item {% if active_admin_tab == 'profile_tab' %}active{% endif %}" onclick="showTab('profile_tab', this)">
+            <div class="nav-icon">⚙️</div>
+            <span class="lang-text" data-hi="सेटिंग्स" data-en="Settings">सेटिंग्स</span>
+        </div>
+    </div>
     {% else %}
     
         <!-- लॉगिन फॉर्म (Login) -->
@@ -1287,9 +1309,13 @@
             if (isDarkMode) { 
                 document.body.classList.add('dark-mode'); 
                 if (darkModeBtn) darkModeBtn.innerText = '☀️ लाइट मोड / Light Mode'; 
+                const dmList = document.getElementById('darkModeBtnList');
+                if(dmList) dmList.innerText = '☀️ लाइट मोड (Light Mode)';
             } else { 
                 document.body.classList.remove('dark-mode'); 
                 if (darkModeBtn) darkModeBtn.innerText = '🌙 डार्क मोड / Dark Mode'; 
+                const dmList = document.getElementById('darkModeBtnList');
+                if(dmList) dmList.innerText = '🌙 डार्क मोड (Dark Mode)';
             }
             
             document.querySelectorAll('.lang-text').forEach(el => { el.innerHTML = el.getAttribute('data-' + currentLang) || el.innerHTML; });
@@ -1301,6 +1327,8 @@
             });
             
             if (langBtn) langBtn.innerText = currentLang === 'hi' ? '🌐 Switch to English' : '🌐 हिन्दी में बदलें';
+            const langList = document.getElementById('langBtnList');
+            if(langList) langList.innerText = currentLang === 'hi' ? '🌐 Switch to English' : '🌐 हिन्दी में बदलें';
         }
         function toggleDarkMode() { isDarkMode = !isDarkMode; localStorage.setItem('darkMode', isDarkMode); updateUI(); }
         function toggleLanguage() { currentLang = currentLang === 'hi' ? 'en' : 'hi'; localStorage.setItem('shopLang', currentLang); updateUI(); }
@@ -1350,9 +1378,6 @@
         // Help & Support Modal Logic
         function contactSupport() {
             document.getElementById('helpModal').style.display = 'block';
-            // Dropdown बंद कर दें अगर अंदर से खोला गया हो
-            const dropdown = document.getElementById('profileDropdown');
-            if(dropdown) dropdown.classList.remove('show-dropdown');
         }
         
         function closeHelpModal() {
@@ -1385,14 +1410,6 @@
             }
             if (cartModal && event.target == cartModal) {
                 cartModal.style.display = "none";
-            }
-            if (!event.target.matches('.profile-btn')) {
-                let dropdowns = document.getElementsByClassName("dropdown-content");
-                for (let i = 0; i < dropdowns.length; i++) {
-                    if (dropdowns[i].classList.contains('show-dropdown')) {
-                        dropdowns[i].classList.remove('show-dropdown');
-                    }
-                }
             }
         });
     </script>
