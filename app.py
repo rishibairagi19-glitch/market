@@ -8,7 +8,9 @@ import traceback
 from PIL import Image
 from dotenv import load_dotenv
 
-app = Flask(__name__)
+# Vercel के लिए फोल्डर का सही (Absolute) पाथ सेट करें (अब सभी फाइलें बाहर ही हैं)
+base_dir = os.path.dirname(os.path.abspath(__file__))
+app = Flask(__name__, template_folder=base_dir, static_folder=base_dir)
 
 load_dotenv()
 
