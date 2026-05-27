@@ -142,7 +142,8 @@ def index():
             for image in images:
                 if image and image.filename:
                     filename = secure_filename(image.filename)
-                    unique_filename = f"{random.randint(10000, 99999)}_{filename}"
+                    base_name = os.path.splitext(filename)[0]
+                    unique_filename = f"{random.randint(10000, 99999)}_{base_name}.webp"
                     
                     # प्रोडक्ट इमेज का साइज कम (Compress) करने के लिए Pillow का उपयोग
                     img = Image.open(image)
@@ -152,7 +153,7 @@ def index():
                     
                     # इमेज को मेमोरी (BytesIO) में सेव करें
                     img_byte_arr = io.BytesIO()
-                    img.save(img_byte_arr, format='JPEG', optimize=True, quality=50)
+                    img.save(img_byte_arr, format='WEBP', quality=60) # WebP: JPEG से 50% अधिक हल्का और फास्ट
                     img_bytes = img_byte_arr.getvalue()
                     
                     try:
@@ -160,7 +161,7 @@ def index():
                         supabase.storage.from_("img-market").upload(
                             file=img_bytes,
                             path=f"products/{unique_filename}",
-                            file_options={"content-type": "image/jpeg"}
+                            file_options={"content-type": "image/webp"}
                         )
                         # पब्लिक URL प्राप्त करें
                         public_url = supabase.storage.from_("img-market").get_public_url(f"products/{unique_filename}")
@@ -262,7 +263,8 @@ def index():
                 
                 if profile_pic and profile_pic.filename:
                     pic_filename = secure_filename(profile_pic.filename)
-                    unique_pic_name = f"profile_{random.randint(10000, 99999)}_{pic_filename}"
+                    base_pic_name = os.path.splitext(pic_filename)[0]
+                    unique_pic_name = f"profile_{random.randint(10000, 99999)}_{base_pic_name}.webp"
                     
                     # प्रोफाइल फोटो को 1:1 (Square) में क्रॉप करें और साइज कम करें
                     img = Image.open(profile_pic)
@@ -281,7 +283,7 @@ def index():
                     
                     # इमेज को मेमोरी (BytesIO) में सेव करें
                     img_byte_arr = io.BytesIO()
-                    img_cropped.save(img_byte_arr, format='JPEG', optimize=True, quality=70)
+                    img_cropped.save(img_byte_arr, format='WEBP', quality=70)
                     img_bytes = img_byte_arr.getvalue()
                     
                     try:
@@ -289,7 +291,7 @@ def index():
                         supabase.storage.from_("img-market").upload(
                             file=img_bytes,
                             path=f"profiles/{unique_pic_name}",
-                            file_options={"content-type": "image/jpeg"}
+                            file_options={"content-type": "image/webp"}
                         )
                         public_url = supabase.storage.from_("img-market").get_public_url(f"profiles/{unique_pic_name}")
                         update_data["profile_pic_url"] = public_url
