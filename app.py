@@ -3,7 +3,6 @@ from supabase import create_client, Client
 from werkzeug.utils import secure_filename
 import os
 import io
-import qrcode
 import random
 from PIL import Image
 from dotenv import load_dotenv
@@ -19,10 +18,6 @@ app.secret_key = "my_super_secret_key"
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
-
-# फ़ोल्डर बनाएं (अगर पहले से नहीं हैं)
-os.makedirs("static/uploads", exist_ok=True)
-os.makedirs("static/qr_codes", exist_ok=True)
 
 @app.route("/logout")
 def logout():
@@ -146,12 +141,9 @@ def index():
             image_url_string = ",".join(image_paths) # सभी इमेज URL को कॉमा से जोड़ दें
 
             try:
-                # 2. दुकान के लिए QR कोड जनरेट करना
+                # 2. दुकान के लिए QR कोड (API के जरिए)
                 shop_url = f"{request.host_url}shop/{shop_name}"
-                qr = qrcode.make(shop_url)
-                qr_filename = f"qr_{secure_filename(shop_name)}.png"
-                qr_path = f"static/qr_codes/{qr_filename}"
-                qr.save(qr_path)
+                qr_url = f"https://api.qrserver.com/v1/create-qr-code/?size=150x150&data={shop_url}"
 
                 # 3. प्रोडक्ट के लिए यूनिक ID बनाएं
                 while True:
@@ -171,10 +163,10 @@ def index():
                     "size": size,
                     "quantity": quantity,
                     "image_url": image_url_string,
-                    "qr_code_url": qr_path
+                    "qr_code_url": qr_url
                 }).execute()
                 
-                success_msg = f"<span class='lang-text' data-hi='प्रोडक्ट सफलतापूर्वक सेव हो गया! आपकी शॉप का लिंक: <a href=\"/shop/{shop_name}\">{shop_url}</a> <br><br> QR कोड: <br><img src=\"/{qr_path}\" width=\"150\">' data-en='Product saved successfully! Your shop link: <a href=\"/shop/{shop_name}\">{shop_url}</a> <br><br> QR Code: <br><img src=\"/{qr_path}\" width=\"150\">'>प्रोडक्ट सफलतापूर्वक सेव हो गया! आपकी शॉप का लिंक: <a href='/shop/{shop_name}'>{shop_url}</a> <br><br> QR कोड: <br><img src='/{qr_path}' width='150'></span>"
+                success_msg = f"<span class='lang-text' data-hi='प्रोडक्ट सफलतापूर्वक सेव हो गया! आपकी शॉप का लिंक: <a href=\"/shop/{shop_name}\">{shop_url}</a> <br><br> QR कोड: <br><img src=\"{qr_url}\" width=\"150\">' data-en='Product saved successfully! Your shop link: <a href=\"/shop/{shop_name}\">{shop_url}</a> <br><br> QR Code: <br><img src=\"{qr_url}\" width=\"150\">'>प्रोडक्ट सफलतापूर्वक सेव हो गया! आपकी शॉप का लिंक: <a href='/shop/{shop_name}'>{shop_url}</a> <br><br> QR कोड: <br><img src='{qr_url}' width='150'></span>"
                 active_admin_tab = "manage_products_tab"
             except Exception as e:
                 error_msg = f"<span class='lang-text' data-hi='प्रोडक्ट सेव करते समय डेटाबेस एरर: {str(e)}' data-en='Database error while saving product: {str(e)}'>प्रोडक्ट सेव करते समय डेटाबेस एरर: {str(e)}</span>"
@@ -303,17 +295,13 @@ def index():
     user_products = []
     user_profile = {}
     user_orders = []
-    qr_filename_template = ""
+    qr_url = ""
     if "shop_name" in session:
         shop_name = session["shop_name"]
         
-        # QR कोड सुनिश्चित करें कि मौजूद है
-        qr_filename_template = f"qr_{secure_filename(shop_name)}.png"
-        qr_path = f"static/qr_codes/{qr_filename_template}"
-        if not os.path.exists(qr_path):
-            shop_url = f"{request.host_url}shop/{shop_name}"
-            qr = qrcode.make(shop_url)
-            qr.save(qr_path)
+        # QR कोड (API के जरिए)
+        shop_url = f"{request.host_url}shop/{shop_name}"
+        qr_url = f"https://api.qrserver.com/v1/create-qr-code/?size=150x150&data={shop_url}"
             
         prod_res = supabase.table("shops").select("*").eq("shop_name", shop_name).execute()
         user_products = prod_res.data
@@ -327,7 +315,7 @@ def index():
         except Exception:
             pass # In case the orders table hasn't been created yet
             
-    return render_template("index.html", user_products=user_products, user_profile=user_profile, user_orders=user_orders, success=success_msg, active_admin_tab=active_admin_tab, qr_filename=qr_filename_template)
+    return render_template("index.html", user_products=user_products, user_profile=user_profile, user_orders=user_orders, success=success_msg, active_admin_tab=active_admin_tab, qr_url=qr_url)
 
 @app.route("/api/place_order", methods=["POST"])
 def api_place_order():
