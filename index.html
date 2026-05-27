@@ -1190,6 +1190,72 @@
         let isDarkMode = localStorage.getItem('darkMode') === 'true';
         let currentLang = localStorage.getItem('shopLang') || 'hi';
         
+        // Categories JSON Data
+        const shopCategories = {
+            "Retail & Shopping (रिटेल/शॉपिंग)": [
+                {val: "clothing", hi: "कपड़े (Clothing & Apparel)", en: "Clothing & Apparel"},
+                {val: "electronics", hi: "इलेक्ट्रॉनिक्स (Electronics & Mobile)", en: "Electronics & Mobile"},
+                {val: "grocery", hi: "किराना (Grocery & Supermarket)", en: "Grocery & Supermarket"},
+                {val: "furniture", hi: "फर्नीचर (Furniture & Decor)", en: "Furniture & Decor"},
+                {val: "footwear", hi: "जूते-चप्पल (Footwear)", en: "Footwear"},
+                {val: "books", hi: "किताबें (Books & Stationery)", en: "Books & Stationery"},
+                {val: "hardware", hi: "हार्डवेयर (Hardware & Tools)", en: "Hardware & Tools"},
+                {val: "jewelry", hi: "आभूषण/ज्वेलरी (Jewelry)", en: "Jewelry"},
+                {val: "cosmetics", hi: "कॉस्मेटिक्स (Cosmetics)", en: "Cosmetics & Beauty"},
+                {val: "toys", hi: "खिलौने (Toys & Games)", en: "Toys & Games"},
+                {val: "sports", hi: "खेलकूद/स्पोर्ट्स (Sports)", en: "Sports & Outdoors"},
+                {val: "automotive", hi: "ऑटोमोबाइल/पार्ट्स (Automotive)", en: "Automotive & Spare Parts"},
+                {val: "pets", hi: "पालतू जानवर (Pet Supplies)", en: "Pet Supplies"},
+                {val: "gifts", hi: "गिफ्ट्स/उपहार (Gifts)", en: "Gifts"},
+                {val: "mobile_accessories", hi: "मोबाइल एक्सेसरीज (Mobile Acc.)", en: "Mobile Accessories"},
+                {val: "computers", hi: "कंप्यूटर/लैपटॉप (Computers)", en: "Computers & Laptops"},
+                {val: "bags", hi: "बैग/लगेज (Bags & Luggage)", en: "Bags & Luggage"},
+                {val: "watches", hi: "घड़ियां (Watches)", en: "Watches"}
+            ],
+            "Food & Beverages (खाना-पीना)": [
+                {val: "sweets", hi: "मिठाई/बेकरी (Sweets & Bakery)", en: "Sweets & Bakery"},
+                {val: "dairy", hi: "डेयरी उत्पाद (Dairy)", en: "Dairy Products"},
+                {val: "meat", hi: "मीट/सीफूड (Meat & Seafood)", en: "Meat & Seafood"},
+                {val: "vegetables", hi: "फल और सब्जियां (Fruits & Veg)", en: "Fruits & Vegetables"},
+                {val: "restaurants", hi: "रेस्टोरेंट/कैफे (Restaurants)", en: "Restaurants & Cafe"}
+            ],
+            "Health & Beauty (स्वास्थ्य और सौंदर्य)": [
+                {val: "pharmacy", hi: "मेडिकल/फार्मेसी (Pharmacy)", en: "Pharmacy"},
+                {val: "supplements", hi: "सप्लीमेंट्स (Health Supplements)", en: "Health Supplements"},
+                {val: "baby_products", hi: "बेबी प्रोडक्ट्स (Baby Products)", en: "Baby Products"},
+                {val: "fitness", hi: "फिटनेस (Fitness Equipment)", en: "Fitness Equipment"},
+                {val: "eyewear", hi: "चश्मे/ऑप्टिकल (Eyewear)", en: "Eyewear & Optics"},
+                {val: "perfumes", hi: "परफ्यूम/इत्र (Perfumes)", en: "Perfumes"}
+            ],
+            "Home & Living (घर और जीवन शैली)": [
+                {val: "appliances", hi: "घरेलू उपकरण (Home Appliances)", en: "Home Appliances"},
+                {val: "gardening", hi: "बागवानी/गार्डनिंग (Gardening)", en: "Gardening & Plants"},
+                {val: "kitchenware", hi: "किचनवेयर (Kitchenware)", en: "Kitchenware & Utensils"},
+                {val: "bedding", hi: "बिस्तर/बेडिंग (Bedding)", en: "Bedding & Towels"},
+                {val: "cleaning", hi: "सफाई उत्पाद (Cleaning Supplies)", en: "Cleaning Supplies"}
+            ],
+            "Construction & Repair (निर्माण और मरम्मत)": [
+                {val: "plumbing", hi: "प्लंबिंग (Plumbing)", en: "Plumbing"},
+                {val: "electrical", hi: "इलेक्ट्रिकल (Electrical)", en: "Electrical Fittings"},
+                {val: "paints", hi: "पेंट/कलर (Paints & Colors)", en: "Paints & Colors"},
+                {val: "tiles", hi: "टाइल्स/मार्बल (Tiles & Marbles)", en: "Tiles & Marbles"},
+                {val: "repair", hi: "रिपेयर/सर्विसिंग (Repair)", en: "Repair & Services"},
+                {val: "industrial", hi: "औद्योगिक (Industrial Supplies)", en: "Industrial Supplies"}
+            ],
+            "Services & Others (सेवाएँ और अन्य)": [
+                {val: "boutique", hi: "बुटीक/टेलर (Boutique & Tailor)", en: "Boutique & Tailor"},
+                {val: "office_supplies", hi: "ऑफिस सप्लाइज़ (Office Supplies)", en: "Office Supplies"},
+                {val: "seeds", hi: "बीज/कृषि (Seeds & Agriculture)", en: "Seeds & Agriculture"},
+                {val: "music", hi: "संगीत उपकरण (Musical Instruments)", en: "Musical Instruments"},
+                {val: "handicrafts", hi: "हस्तशिल्प (Handicrafts)", en: "Handicrafts"},
+                {val: "art_supplies", hi: "आर्ट सप्लाइज़ (Art Supplies)", en: "Art Supplies"},
+                {val: "party_supplies", hi: "पार्टी सप्लाइज़ (Party Supplies)", en: "Party Supplies"},
+                {val: "bicycles", hi: "साइकिल (Bicycles)", en: "Bicycles"},
+                {val: "sleepwear", hi: "स्लीपवियर (Sleepwear)", en: "Sleepwear & Innerwear"},
+                {val: "general", hi: "अन्य (General Store)", en: "Other (General Store)"}
+            ]
+        };
+        
         function updateUI() {
             let darkModeBtn = document.getElementById('darkModeBtn');
             let langBtn = document.getElementById('langBtn');
@@ -1215,7 +1281,33 @@
         function toggleDarkMode() { isDarkMode = !isDarkMode; localStorage.setItem('darkMode', isDarkMode); updateUI(); }
         function toggleLanguage() { currentLang = currentLang === 'hi' ? 'en' : 'hi'; localStorage.setItem('shopLang', currentLang); updateUI(); }
         
-        document.addEventListener("DOMContentLoaded", updateUI);
+        function populateMainCategories() {
+            const mainSelects = [document.getElementById('signup_main_cat'), document.getElementById('edit_main_cat')];
+            mainSelects.forEach(select => {
+                if(!select) return;
+                select.innerHTML = `<option value="" class="lang-text" data-hi="-- व्यवसाय का क्षेत्र चुनें --" data-en="-- Select Business Field --">-- व्यवसाय का क्षेत्र चुनें --</option>`;
+                Object.keys(shopCategories).forEach(field => { select.appendChild(new Option(field, field)); });
+            });
+        }
+        
+        function updateSubCats(mainId, subId, preSelectedVal = "") {
+            const mainSelect = document.getElementById(mainId);
+            const subSelect = document.getElementById(subId);
+            if(!mainSelect || !subSelect) return;
+            
+            subSelect.innerHTML = `<option value="" class="lang-text" data-hi="-- पहले क्षेत्र चुनें --" data-en="-- Select Field First --">-- पहले क्षेत्र चुनें --</option>`;
+            if(shopCategories[mainSelect.value]) {
+                shopCategories[mainSelect.value].forEach(cat => {
+                    const opt = document.createElement('option');
+                    opt.value = cat.val; opt.className = 'lang-text'; opt.setAttribute('data-hi', cat.hi); opt.setAttribute('data-en', cat.en);
+                    opt.innerText = currentLang === 'en' ? cat.en : cat.hi;
+                    if(cat.val === preSelectedVal) opt.selected = true;
+                    subSelect.appendChild(opt);
+                });
+            }
+        }
+        
+        document.addEventListener("DOMContentLoaded", function() { populateMainCategories(); updateUI(); });
         
         document.addEventListener('submit', function() {
             let loader = document.getElementById('global-loader');
