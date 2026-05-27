@@ -657,6 +657,36 @@
 
     <h2 class="lang-text" data-hi="{{ session.get('shop_name', '') }} का डैशबोर्ड" data-en="{{ session.get('shop_name', '') }}'s Dashboard">{{ session.get('shop_name', '') }} का डैशबोर्ड</h2>
     <p style="text-align: center; color: #7f8c8d; margin-top: -15px; font-size: 14px;"><span class="lang-text" data-hi="शॉप ID:" data-en="Shop ID:">शॉप ID:</span> <b>{{ session.get('shop_id', '') }}</b></p>
+
+    <!-- Home / Dashboard Tab -->
+    <div id="home_tab" {% if active_admin_tab != 'home_tab' %}style="display: none;"{% endif %}>
+        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 20px; padding: 25px 20px; margin-bottom: 25px; color: white; box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3); position: relative; overflow: hidden;">
+            <h2 style="color: white; margin: 0; font-size: 22px; text-align: left; position: relative; z-index: 2;" class="lang-text" data-hi="👋 नमस्ते, {{ user_profile.owner_name|default('दुकानदार') }}!" data-en="👋 Hello, {{ user_profile.owner_name|default('Shop Owner') }}!">👋 नमस्ते, {{ user_profile.owner_name|default('दुकानदार') }}!</h2>
+            <p style="color: rgba(255,255,255,0.9); margin-top: 5px; font-size: 14px; position: relative; z-index: 2;" class="lang-text" data-hi="आपकी दुकान कैसी चल रही है?" data-en="How is your shop doing?">आपकी दुकान कैसी चल रही है?</p>
+            <div style="position: absolute; right: -20px; top: -20px; font-size: 100px; opacity: 0.1; z-index: 1;">🛍️</div>
+        </div>
+        
+        <h3 style="margin-top: 0; color: #1a202c; font-size: 18px; margin-bottom: 15px;" class="lang-text" data-hi="📊 ओवरव्यू (Overview)" data-en="📊 Overview">📊 ओवरव्यू (Overview)</h3>
+        <div class="profile-stats-grid" style="margin-bottom: 25px;">
+            <div class="stat-box" style="border-left-color: #38a169; cursor: pointer; padding: 15px;" onclick="showTab('orders_tab', document.querySelectorAll('.nav-item')[3])">
+                <div class="stat-label lang-text" data-hi="कुल ऑर्डर्स" data-en="Total Orders">कुल ऑर्डर्स</div>
+                <div class="stat-value" style="color: #38a169; font-size: 22px;">📋 {{ user_orders|length }}</div>
+            </div>
+            <div class="stat-box" style="border-left-color: #3182ce; cursor: pointer; padding: 15px;" onclick="showTab('manage_products_tab', document.querySelectorAll('.nav-item')[2])">
+                <div class="stat-label lang-text" data-hi="कुल प्रोडक्ट्स" data-en="Total Products">कुल प्रोडक्ट्स</div>
+                <div class="stat-value" style="color: #3182ce; font-size: 22px;">📦 {{ user_products|length }}</div>
+            </div>
+            <div class="stat-box full-width" style="border-left-color: #ed8936; padding: 15px;">
+                <div class="stat-label lang-text" data-hi="दुकान के व्यूज़ (Views)" data-en="Shop Views">दुकान के व्यूज़ (Views)</div>
+                <div class="stat-value" style="color: #ed8936; font-size: 22px;">👁️ {{ user_profile.views_count|default(0) }}</div>
+            </div>
+        </div>
+        
+        <div style="display: flex; gap: 15px; margin-bottom: 10px;">
+            <a href="/shop/{{ session.get('shop_name', '') }}" target="_blank" style="flex: 1; background: #3b82f6; color: white; text-align: center; padding: 14px; border-radius: 12px; text-decoration: none; font-weight: bold; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3); transition: 0.3s;" class="lang-text" data-hi="👁️ दुकान देखें" data-en="👁️ View Shop">👁️ दुकान देखें</a>
+            <button onclick="shareAdminShop('{{ request.host_url }}shop/{{ session.get('shop_name', '') }}', '{{ session.get('shop_name', '') }}')" style="flex: 1; background: #10b981; color: white; border: none; padding: 14px; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 15px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3); transition: 0.3s;" class="lang-text" data-hi="📤 शेयर करें" data-en="📤 Share">📤 शेयर करें</button>
+        </div>
+    </div>
     
     <div id="add_product_tab" {% if active_admin_tab != 'add_product_tab' %}style="display: none;"{% endif %}>
     <div class="add-product-card">
@@ -1091,6 +1121,7 @@
 
     <script>
         function showTab(tabName, element) {
+            document.getElementById('home_tab').style.display = 'none';
             document.getElementById('add_product_tab').style.display = 'none';
             document.getElementById('profile_tab').style.display = 'none';
             document.getElementById('manage_products_tab').style.display = 'none';
@@ -1215,10 +1246,22 @@
                 if (cropper) { cropper.destroy(); cropper = null; }
             }, 'image/webp', 0.7);
         }
+         
+        function shareAdminShop(shopUrl, shopName) {
+            let titleText = currentLang === 'hi' ? 'हमारी दुकान से बेहतरीन प्रोडक्ट्स खरीदें!' : 'Buy the best products from our shop!';
+            let promptText = currentLang === 'hi' ? 'इस लिंक को कॉपी करके शेयर करें:' : 'Copy this link to share:';
+            if (navigator.share) {
+                navigator.share({ title: shopName, text: titleText, url: shopUrl }).catch(err => console.log('Error sharing', err));
+            } else { prompt(promptText, shopUrl); }
+        }
     </script>
 
     <!-- Bottom Navigation Bar (Modern App Style) -->
     <div class="bottom-nav">
+        <div class="nav-item {% if active_admin_tab == 'home_tab' %}active{% endif %}" onclick="showTab('home_tab', this)">
+            <div class="nav-icon">🏠</div>
+            <span class="lang-text" data-hi="होम" data-en="Home">होम</span>
+        </div>
         <div class="nav-item {% if active_admin_tab == 'add_product_tab' %}active{% endif %}" onclick="showTab('add_product_tab', this)">
             <div class="nav-icon">➕</div>
             <span class="lang-text" data-hi="नया" data-en="New">नया</span>
