@@ -1,0 +1,6 @@
+Flask
+supabase
+Pillow
+qrcode
+Werkzeug
+python-dotenv

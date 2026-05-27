@@ -1,0 +1,378 @@
+from flask import Flask, render_template, request, jsonify, session, redirect, url_for
+from supabase import create_client, Client
+from werkzeug.utils import secure_filename
+import os
+import io
+import qrcode
+import random
+from PIL import Image
+from dotenv import load_dotenv
+
+app = Flask(__name__)
+
+load_dotenv()
+
+# सेशन के लिए एक सीक्रेट की सेट करें (लॉगिन सुरक्षित रखने के लिए)
+app.secret_key = "my_super_secret_key"
+
+# Supabase क्रेडेंशियल्स सेट करें
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+
+# फ़ोल्डर बनाएं (अगर पहले से नहीं हैं)
+os.makedirs("static/uploads", exist_ok=True)
+os.makedirs("static/qr_codes", exist_ok=True)
+
+@app.route("/logout")
+def logout():
+    session.clear()
+    return redirect(url_for("index"))
+
+@app.route("/", methods=["GET", "POST"])
+def index():
+    success_msg = None
+    active_admin_tab = "add_product_tab"
+
+    if request.method == "POST":
+        action = request.form.get("action")
+        
+        if action == "signup":
+            owner_name = request.form.get("owner_name")
+            shop_name = request.form.get("shop_name")
+            mobile_number = request.form.get("mobile_number")
+            password = request.form.get("password")
+            category = request.form.get("category")
+            
+            # चेक करें कि दुकान का नाम या मोबाइल नंबर पहले से मौजूद तो नहीं है
+            existing_shop = supabase.table("shop_owners").select("*").eq("shop_name", shop_name).execute()
+            if existing_shop.data:
+                return render_template("index.html", error="<span class='lang-text' data-hi='यह दुकान का नाम पहले से किसी ने ले लिया है। कृपया कोई और नाम चुनें!' data-en='This shop name is already taken. Please choose another!'>यह दुकान का नाम पहले से किसी ने ले लिया है। कृपया कोई और नाम चुनें!</span>", active_tab="signup")
+                
+            existing_mobile = supabase.table("shop_owners").select("*").eq("mobile_number", mobile_number).execute()
+            if existing_mobile.data:
+                return render_template("index.html", error="<span class='lang-text' data-hi='यह मोबाइल नंबर पहले से रजिस्टर है। कृपया लॉगिन करें या दूसरा नंबर चुनें!' data-en='This mobile number is already registered. Please login or choose another!'>यह मोबाइल नंबर पहले से रजिस्टर है। कृपया लॉगिन करें या दूसरा नंबर चुनें!</span>", active_tab="signup")
+                
+            # 7-डिजिट की यूनिक ID जनरेट करें (जो पहले से डेटाबेस में न हो)
+            while True:
+                shop_id = random.randint(1000000, 9999999)
+                check_id = supabase.table("shop_owners").select("shop_id").eq("shop_id", shop_id).execute()
+                if not check_id.data:
+                    break
+
+            # Supabase में नया यूज़र (दुकानदार) सेव करें
+            supabase.table("shop_owners").insert({
+                "owner_name": owner_name,
+                "shop_name": shop_name,
+                "mobile_number": mobile_number,
+                "password": password,
+                "shop_id": shop_id,
+                "category": category
+            }).execute()
+            
+            success_msg = f"<span class='lang-text' data-hi='साइन-अप सफल रहा! आपकी 7-डिजिट की शॉप ID <b>{shop_id}</b> है। आप इस ID या अपने मोबाइल नंबर से लॉगिन कर सकते हैं।' data-en='Sign-up successful! Your 7-digit Shop ID is <b>{shop_id}</b>. You can login using this ID or your mobile number.'>साइन-अप सफल रहा! आपकी 7-डिजिट की शॉप ID <b>{shop_id}</b> है। आप इस ID या अपने मोबाइल नंबर से लॉगिन कर सकते हैं।</span>"
+            return render_template("index.html", success=success_msg, active_tab="login")
+            
+        elif action == "login":
+            login_id = request.form.get("login_id")
+            password = request.form.get("password")
+            
+            # यूज़र को ID या मोबाइल नंबर से ढूँढें
+            user_data = None
+            user_res = supabase.table("shop_owners").select("*").eq("mobile_number", login_id).execute()
+            if user_res.data:
+                user_data = user_res.data[0]
+            elif login_id.isdigit() and len(login_id) == 7:
+                user_res = supabase.table("shop_owners").select("*").eq("shop_id", int(login_id)).execute()
+                if user_res.data:
+                    user_data = user_res.data[0]
+            
+            if not user_data:
+                return render_template("index.html", error="<span class='lang-text' data-hi='यह मोबाइल नंबर या ID रजिस्टर नहीं है। कृपया पहले साइन-अप करें।' data-en='This mobile number or ID is not registered. Please sign up first.'>यह मोबाइल नंबर या ID रजिस्टर नहीं है। कृपया पहले साइन-अप करें।</span>", active_tab="login")
+                
+            if user_data["password"] != password:
+                return render_template("index.html", error="<span class='lang-text' data-hi='पासवर्ड गलत है। कृपया सही पासवर्ड दर्ज करें।' data-en='Incorrect password. Please enter the correct password.'>पासवर्ड गलत है। कृपया सही पासवर्ड दर्ज करें।</span>", active_tab="login")
+            
+            # अगर सब सही है
+            session["owner_name"] = user_data["owner_name"]
+            session["shop_name"] = user_data["shop_name"]
+            session["shop_id"] = user_data.get("shop_id")
+            session["category"] = user_data.get("category", "general")
+            return redirect(url_for("index"))
+                
+        elif action == "add_product":
+            if "shop_name" not in session:
+                return redirect(url_for("index"))
+            shop_name = session["shop_name"]
+            owner_name = session.get("owner_name", "Unknown")
+            product = request.form.get("product")
+            price = request.form.get("price")
+            size = request.form.get("size")
+            quantity = request.form.get("quantity")
+            product_category = request.form.get("product_category", "General")
+        
+            # 1. एक से ज़्यादा इमेज अपलोड हैंडल करना (Multiple Images)
+            images = request.files.getlist("product_image")
+            image_paths = []
+            for image in images:
+                if image and image.filename:
+                    filename = secure_filename(image.filename)
+                    unique_filename = f"{random.randint(10000, 99999)}_{filename}"
+                    
+                    # प्रोडक्ट इमेज का साइज कम (Compress) करने के लिए Pillow का उपयोग
+                    img = Image.open(image)
+                    if img.mode in ("RGBA", "P"):
+                        img = img.convert("RGB")
+                    img.thumbnail((800, 800))  # अधिकतम साइज 800x800 पिक्सल
+                    
+                    # इमेज को मेमोरी (BytesIO) में सेव करें
+                    img_byte_arr = io.BytesIO()
+                    img.save(img_byte_arr, format='JPEG', optimize=True, quality=60)
+                    img_bytes = img_byte_arr.getvalue()
+                    
+                    try:
+                        # Supabase Storage में अपलोड करें (बकेट: img-market)
+                        supabase.storage.from_("img-market").upload(
+                            file=img_bytes,
+                            path=f"products/{unique_filename}",
+                            file_options={"content-type": "image/jpeg"}
+                        )
+                        # पब्लिक URL प्राप्त करें
+                        public_url = supabase.storage.from_("img-market").get_public_url(f"products/{unique_filename}")
+                        image_paths.append(public_url)
+                    except Exception as e:
+                        print(f"Error uploading image to Supabase: {e}")
+            
+            image_url_string = ",".join(image_paths) # सभी इमेज URL को कॉमा से जोड़ दें
+
+            try:
+                # 2. दुकान के लिए QR कोड जनरेट करना
+                shop_url = f"{request.host_url}shop/{shop_name}"
+                qr = qrcode.make(shop_url)
+                qr_filename = f"qr_{secure_filename(shop_name)}.png"
+                qr_path = f"static/qr_codes/{qr_filename}"
+                qr.save(qr_path)
+
+                # 3. प्रोडक्ट के लिए यूनिक ID बनाएं
+                while True:
+                    product_id = f"PRD{random.randint(10000, 99999)}"
+                    check_pid = supabase.table("shops").select("product_id").eq("product_id", product_id).execute()
+                    if not check_pid.data:
+                        break
+
+                # Supabase में डेटा डालें
+                data = supabase.table("shops").insert({
+                    "owner_name": owner_name,
+                    "shop_name": shop_name,
+                    "product_id": product_id,
+                    "product": product,
+                    "product_category": product_category,
+                    "price": price,
+                    "size": size,
+                    "quantity": quantity,
+                    "image_url": image_url_string,
+                    "qr_code_url": qr_path
+                }).execute()
+                
+                success_msg = f"<span class='lang-text' data-hi='प्रोडक्ट सफलतापूर्वक सेव हो गया! आपकी शॉप का लिंक: <a href=\"/shop/{shop_name}\">{shop_url}</a> <br><br> QR कोड: <br><img src=\"/{qr_path}\" width=\"150\">' data-en='Product saved successfully! Your shop link: <a href=\"/shop/{shop_name}\">{shop_url}</a> <br><br> QR Code: <br><img src=\"/{qr_path}\" width=\"150\">'>प्रोडक्ट सफलतापूर्वक सेव हो गया! आपकी शॉप का लिंक: <a href='/shop/{shop_name}'>{shop_url}</a> <br><br> QR कोड: <br><img src='/{qr_path}' width='150'></span>"
+                active_admin_tab = "manage_products_tab"
+            except Exception as e:
+                error_msg = f"<span class='lang-text' data-hi='प्रोडक्ट सेव करते समय डेटाबेस एरर: {str(e)}' data-en='Database error while saving product: {str(e)}'>प्रोडक्ट सेव करते समय डेटाबेस एरर: {str(e)}</span>"
+                return render_template("index.html", error=error_msg)
+
+        elif action == "delete_product":
+            product_id = request.form.get("product_id")
+            try:
+                supabase.table("shops").delete().eq("product_id", product_id).eq("shop_name", session["shop_name"]).execute()
+                success_msg = "<span class='lang-text' data-hi='प्रोडक्ट सफलतापूर्वक डिलीट हो गया!' data-en='Product deleted successfully!'>प्रोडक्ट सफलतापूर्वक डिलीट हो गया!</span>"
+                active_admin_tab = "manage_products_tab"
+            except Exception as e:
+                return render_template("index.html", error=f"डिलीट करते समय एरर: {str(e)}")
+
+        elif action == "edit_product":
+            product_id = request.form.get("product_id")
+            try:
+                supabase.table("shops").update({
+                    "product": request.form.get("product"),
+                    "price": request.form.get("price"),
+                    "size": request.form.get("size"),
+                    "product_category": request.form.get("product_category", "General"),
+                    "quantity": request.form.get("quantity")
+                }).eq("product_id", product_id).eq("shop_name", session["shop_name"]).execute()
+                success_msg = "<span class='lang-text' data-hi='प्रोडक्ट सफलतापूर्वक अपडेट हो गया!' data-en='Product updated successfully!'>प्रोडक्ट सफलतापूर्वक अपडेट हो गया!</span>"
+                active_admin_tab = "manage_products_tab"
+            except Exception as e:
+                return render_template("index.html", error=f"अपडेट करते समय एरर: {str(e)}")
+                
+        elif action == "toggle_hide":
+            product_id = request.form.get("product_id")
+            try:
+                res = supabase.table("shops").select("*").eq("product_id", product_id).eq("shop_name", session["shop_name"]).execute()
+                if res.data:
+                    curr_val = res.data[0].get("is_hidden")
+                    is_hidden_currently = str(curr_val).lower() in ["true", "1", "t", "yes"]
+                    new_status = not is_hidden_currently
+                    
+                    update_res = supabase.table("shops").update({"is_hidden": new_status}).eq("product_id", product_id).eq("shop_name", session["shop_name"]).execute()
+                    if update_res.data and "is_hidden" not in update_res.data[0]:
+                        raise Exception("Supabase डेटाबेस में 'is_hidden' कॉलम नहीं मिला! कृपया SQL Editor में जाकर ALTER TABLE वाली कमांड रन करें।")
+                        
+                success_msg = "<span class='lang-text' data-hi='प्रोडक्ट सफलतापूर्वक छिपा/दिखा दिया गया है!' data-en='Product visibility toggled successfully!'>प्रोडक्ट सफलतापूर्वक छिपा/दिखा दिया गया है!</span>"
+                active_admin_tab = "manage_products_tab"
+            except Exception as e:
+                return render_template("index.html", error=f"<span class='lang-text' data-hi='एरर: {str(e)}' data-en='Error: {str(e)}'>एरर: {str(e)}</span>", active_admin_tab="manage_products_tab")
+                
+        elif action == "update_order":
+            order_id = request.form.get("order_id")
+            new_status = request.form.get("status")
+            try:
+                supabase.table("orders").update({"status": new_status}).eq("id", order_id).eq("shop_name", session["shop_name"]).execute()
+                success_msg = "<span class='lang-text' data-hi='ऑर्डर स्टेटस अपडेट हो गया!' data-en='Order status updated!'>ऑर्डर स्टेटस अपडेट हो गया!</span>"
+                active_admin_tab = "orders_tab"
+            except Exception as e:
+                return render_template("index.html", error=f"ऑर्डर अपडेट करते समय एरर: {str(e)}")
+                
+        elif action == "edit_profile":
+            new_owner_name = request.form.get("owner_name")
+            new_mobile = request.form.get("mobile_number")
+            new_category = request.form.get("category")
+            new_password = request.form.get("password")
+            profile_pic = request.files.get("profile_pic")
+            
+            try:
+                # चेक करें कि नया मोबाइल नंबर किसी और दुकान का तो नहीं है
+                existing = supabase.table("shop_owners").select("shop_name").eq("mobile_number", new_mobile).execute()
+                if existing.data and existing.data[0]["shop_name"] != session["shop_name"]:
+                    return render_template("index.html", error="<span class='lang-text' data-hi='यह मोबाइल नंबर पहले से किसी और के पास रजिस्टर है!' data-en='This mobile number is registered with someone else!'>यह मोबाइल नंबर पहले से किसी और के पास रजिस्टर है!</span>", active_admin_tab="profile_tab")
+                
+                update_data = {
+                    "owner_name": new_owner_name,
+                    "mobile_number": new_mobile,
+                    "category": new_category
+                }
+                
+                if new_password:
+                    update_data["password"] = new_password
+                
+                if profile_pic and profile_pic.filename:
+                    pic_filename = secure_filename(profile_pic.filename)
+                    unique_pic_name = f"profile_{random.randint(10000, 99999)}_{pic_filename}"
+                    
+                    # प्रोफाइल फोटो को 1:1 (Square) में क्रॉप करें और साइज कम करें
+                    img = Image.open(profile_pic)
+                    width, height = img.size
+                    min_dim = min(width, height) # चौड़ाई या ऊँचाई में से जो कम हो, उसे चुनें
+                    
+                    left = (width - min_dim) / 2
+                    top = (height - min_dim) / 2
+                    right = (width + min_dim) / 2
+                    bottom = (height + min_dim) / 2
+                    img_cropped = img.crop((left, top, right, bottom)) # बीच से 1:1 क्रॉप करें
+                    
+                    if img_cropped.mode in ("RGBA", "P"):
+                        img_cropped = img_cropped.convert("RGB")
+                    img_cropped.thumbnail((300, 300)) # प्रोफाइल के लिए 300x300 बहुत है
+                    
+                    # इमेज को मेमोरी (BytesIO) में सेव करें
+                    img_byte_arr = io.BytesIO()
+                    img_cropped.save(img_byte_arr, format='JPEG', optimize=True, quality=70)
+                    img_bytes = img_byte_arr.getvalue()
+                    
+                    try:
+                        # Supabase Storage में अपलोड करें
+                        supabase.storage.from_("img-market").upload(
+                            file=img_bytes,
+                            path=f"profiles/{unique_pic_name}",
+                            file_options={"content-type": "image/jpeg"}
+                        )
+                        public_url = supabase.storage.from_("img-market").get_public_url(f"profiles/{unique_pic_name}")
+                        update_data["profile_pic_url"] = public_url
+                    except Exception as e:
+                        print(f"Error uploading profile pic to Supabase: {e}")
+                
+                supabase.table("shop_owners").update(update_data).eq("shop_name", session["shop_name"]).execute()
+                
+                session["owner_name"] = new_owner_name
+                session["category"] = new_category
+                success_msg = "<span class='lang-text' data-hi='प्रोफाइल सफलतापूर्वक अपडेट हो गई!' data-en='Profile updated successfully!'>प्रोफाइल सफलतापूर्वक अपडेट हो गई!</span>"
+                active_admin_tab = "profile_tab"
+            except Exception as e:
+                return render_template("index.html", error=f"प्रोफाइल अपडेट करते समय एरर: {str(e)}", active_admin_tab="profile_tab")
+        
+    # अगर यूज़र लॉगिन है तो उसकी प्रोफाइल और प्रोडक्ट डेटा लाएं
+    user_products = []
+    user_profile = {}
+    user_orders = []
+    qr_filename_template = ""
+    if "shop_name" in session:
+        shop_name = session["shop_name"]
+        
+        # QR कोड सुनिश्चित करें कि मौजूद है
+        qr_filename_template = f"qr_{secure_filename(shop_name)}.png"
+        qr_path = f"static/qr_codes/{qr_filename_template}"
+        if not os.path.exists(qr_path):
+            shop_url = f"{request.host_url}shop/{shop_name}"
+            qr = qrcode.make(shop_url)
+            qr.save(qr_path)
+            
+        prod_res = supabase.table("shops").select("*").eq("shop_name", shop_name).execute()
+        user_products = prod_res.data
+        prof_res = supabase.table("shop_owners").select("*").eq("shop_name", shop_name).execute()
+        if prof_res.data:
+            user_profile = prof_res.data[0]
+            
+        try:
+            order_res = supabase.table("orders").select("*").eq("shop_name", shop_name).order("id", desc=True).execute()
+            user_orders = order_res.data
+        except Exception:
+            pass # In case the orders table hasn't been created yet
+            
+    return render_template("index.html", user_products=user_products, user_profile=user_profile, user_orders=user_orders, success=success_msg, active_admin_tab=active_admin_tab, qr_filename=qr_filename_template)
+
+@app.route("/api/place_order", methods=["POST"])
+def api_place_order():
+    data = request.json
+    try:
+        supabase.table("orders").insert({
+            "shop_name": data.get("shop_name"),
+            "customer_name": data.get("customer_name"),
+            "customer_mobile": data.get("customer_mobile"),
+            "order_details": data.get("order_details"),
+            "total_amount": data.get("total_amount"),
+            "status": "Pending"
+        }).execute()
+        return jsonify({"success": True})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)})
+
+# 3. पब्लिक शॉप पेज (जिसे QR स्कैन करके ग्राहक देखेंगे)
+@app.route("/shop/<shop_name>")
+def view_shop(shop_name):
+    # दुकान की केटेगरी लाएं ताकि ग्राहकों को सही लेबल दिखे
+    owner_res = supabase.table("shop_owners").select("category", "mobile_number", "views_count").eq("shop_name", shop_name).execute()
+    
+    # दुकान के व्यूज़ (Views) बढ़ाएं
+    if owner_res.data:
+        current_views = owner_res.data[0].get("views_count") or 0
+        try:
+            supabase.table("shop_owners").update({"views_count": current_views + 1}).eq("shop_name", shop_name).execute()
+        except Exception:
+            pass
+
+    # Supabase से इस दुकान के प्रोडक्ट्स लाएं
+    response = supabase.table("shops").select("*").eq("shop_name", shop_name).execute()
+    products = []
+    for p in response.data:
+        if str(p.get("is_hidden")).lower() not in ["true", "1", "t", "yes"]:
+            products.append(p)
+    
+    # प्रोडक्ट्स की यूनीक केटेगरी निकालें
+    product_categories = sorted(list(set([p.get("product_category") or "General" for p in products])))
+
+    shop_category = owner_res.data[0].get("category", "general") if owner_res.data else "general"
+    shop_mobile = owner_res.data[0].get("mobile_number", "") if owner_res.data else ""
+    
+    return render_template("index.html", is_shop_view=True, shop_name=shop_name, products=products, product_categories=product_categories, shop_category=shop_category, shop_mobile=shop_mobile)
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000, debug=True)
