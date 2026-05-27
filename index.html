@@ -118,11 +118,15 @@
         body.dark-mode .modal-content, body.dark-mode .dropdown-content { background: #1e293b; border-color: #334155; color: #f8fafc; }
         body.dark-mode .dropdown-content a { color: #f8fafc; border-bottom-color: #334155; }
         body.dark-mode .dropdown-content a:hover { background: #334155; color: #38bdf8; }
-         body.dark-mode input, body.dark-mode select, body.dark-mode .edit-profile-form input, body.dark-mode .edit-profile-form select { background: #0f172a; color: #f8fafc; border-color: #334155; }
+        body.dark-mode input, body.dark-mode select, body.dark-mode .edit-profile-form input, body.dark-mode .edit-profile-form select { background: #0f172a; color: #f8fafc; border-color: #334155; }
         body.dark-mode input:focus, body.dark-mode select:focus, body.dark-mode .edit-profile-form input:focus, body.dark-mode .edit-profile-form select:focus { background: #1e293b; color: #ffffff; border-color: #3b82f6; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2); }
-        body.dark-mode .card-title, body.dark-mode h2, body.dark-mode h3, body.dark-mode .stat-value, body.dark-mode .order-cust, body.dark-mode .order-id { color: #f8fafc; }
+        body.dark-mode .card-title, body.dark-mode h2, body.dark-mode h3, body.dark-mode .stat-value, body.dark-mode .order-cust, body.dark-mode .order-id, body.dark-mode .shop-logo, body.dark-mode .card-price { color: #f8fafc; }
         body.dark-mode .stat-box { background: #0f172a; border-left-color: #3b82f6; }
         body.dark-mode .card-details, body.dark-mode .stat-id, body.dark-mode .order-items { background: #0f172a; border-color: #334155; color: #cbd5e0; }
+        body.dark-mode .ecommerce-header { background: #1e293b; border-color: #334155; }
+        body.dark-mode .search-input { background: #0f172a; color: #f8fafc; border-color: #334155; }
+        body.dark-mode .header-icon-btn { background: #0f172a; color: #cbd5e0; }
+        body.dark-mode .card img { background: #1e293b; border-bottom-color: #334155; }
 
           /* Bottom Navigation Bar CSS */
         .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: #ffffff; box-shadow: 0 -4px 20px rgba(0,0,0,0.08); display: flex; justify-content: space-around; padding: 12px 0 8px 0; z-index: 1000; border-top: 1px solid #edf2f7; border-radius: 20px 20px 0 0; }
@@ -145,11 +149,11 @@
         body.dark-mode .settings-item:hover { color: #38bdf8; }
 
         /* Category Filters CSS */
-        .cat-btn { padding: 8px 18px; border-radius: 20px; border: 1px solid #cbd5e0; background: white; color: #4a5568; cursor: pointer; white-space: nowrap; font-weight: bold; transition: all 0.3s; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .cat-btn:hover { background: #edf2f7; }
-        .cat-btn.active-cat { background: #3b82f6; color: white; border-color: #3b82f6; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.4); }
+        .cat-btn { padding: 8px 20px; border-radius: 100px; border: 1px solid #e2e8f0; background: #f8fafc; color: #4a5568; cursor: pointer; white-space: nowrap; font-weight: 600; font-size: 13px; transition: all 0.3s; }
+        .cat-btn:hover { background: #edf2f7; border-color: #cbd5e0; }
+        .cat-btn.active-cat { background: #1a202c; color: white; border-color: #1a202c; box-shadow: 0 4px 10px rgba(26, 32, 44, 0.2); }
         body.dark-mode .cat-btn { background: #1e293b; border-color: #334155; color: #cbd5e0; }
-        body.dark-mode .cat-btn.active-cat { background: #3b82f6; color: white; border-color: #3b82f6; }
+        body.dark-mode .cat-btn.active-cat { background: #38bdf8; color: #0f172a; border-color: #38bdf8; }
 
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f7f6; margin: 0; padding: 20px; color: #333; }
         .container { max-width: 500px; margin: 40px auto; background: #fff; padding: 30px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
@@ -169,24 +173,43 @@
         .alert-error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
         .alert-success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
 
-        /* Customer View Premium UI */
-        .customer-top-bar { background: #1e293b; padding: 12px 25px; display: flex; justify-content: space-between; align-items: center; color: white; position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin: -20px -20px 0 -20px; }
-        .customer-top-bar a { color: white; text-decoration: none; font-weight: bold; font-size: 14px; background: rgba(255,255,255,0.15); padding: 8px 16px; border-radius: 20px; transition: 0.3s; border: 1px solid rgba(255,255,255,0.1); }
-        .customer-top-bar a:hover { background: rgba(255,255,255,0.25); transform: translateY(-1px); }
-        .shop-hero { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 50px 20px; text-align: center; color: white; margin: 0 -20px 40px -20px; border-radius: 0 0 30px 30px; box-shadow: 0 10px 30px rgba(118, 75, 162, 0.2); }
-        .shop-hero h1 { margin: 0; font-size: 2.8em; font-weight: 900; letter-spacing: -1px; text-shadow: 0 4px 10px rgba(0,0,0,0.2); }
-        .shop-hero p { margin: 15px 0 0; font-size: 1.1em; opacity: 0.9; font-weight: 500; }
+        /* E-commerce Style Overhaul (Amazon/Flipkart UI) */
+        .ecommerce-header { background: #ffffff; padding: 15px 20px 15px; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.08); margin: -20px -20px 15px -20px; }
+        .ecommerce-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .shop-logo { font-size: 22px; font-weight: 900; color: #1a202c; display: flex; align-items: center; gap: 10px; text-decoration: none; letter-spacing: -0.5px; }
+        .header-actions { display: flex; gap: 12px; align-items: center; }
+        .header-icon-btn { position: relative; background: #f1f5f9; border: none; width: 42px; height: 42px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 18px; cursor: pointer; color: #2d3748; transition: 0.2s; }
+        .header-icon-btn:hover { background: #e2e8f0; }
+        .cart-badge-header { position: absolute; top: -2px; right: -2px; background: #e53e3e; color: white; font-size: 11px; font-weight: bold; width: 20px; height: 20px; border-radius: 50%; display: flex; justify-content: center; align-items: center; border: 2px solid #fff; box-shadow: 0 2px 5px rgba(229, 62, 62, 0.4); }
+        .search-container { position: relative; width: 100%; }
+        .search-input { width: 100%; padding: 14px 15px 14px 45px; border-radius: 12px; border: 1px solid #e2e8f0; background: #f8fafc; font-size: 15px; outline: none; transition: 0.3s; box-sizing: border-box; font-weight: 500; }
+        .search-input:focus { border-color: #3b82f6; background: #fff; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15); }
+        .search-icon { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #64748b; font-size: 18px; }
 
-        .grid-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; max-width: 1100px; margin: 0 auto; }
-        .card { background: #ffffff; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid #edf2f7; overflow: hidden; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; text-align: left; display: flex; flex-direction: column; }
-        .card:hover { transform: translateY(-8px); box-shadow: 0 20px 40px rgba(0,0,0,0.12); border-color: #cbd5e0; }
-        .card img { width: 100%; height: 240px; object-fit: cover; border-bottom: 1px solid #edf2f7; transition: transform 0.5s; }
-        .card:hover img { transform: scale(1.03); }
-        .card-content { padding: 20px; display: flex; flex-direction: column; flex-grow: 1; }
-        .card-title { font-size: 1.2em; font-weight: 800; margin-bottom: 8px; color: #2d3748; }
-        .card-price { color: #38a169; font-size: 1.5em; font-weight: 900; margin-bottom: 15px; }
-        .card-details { color: #4a5568; font-size: 0.85em; background: #f7fafc; padding: 12px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 15px; flex-grow: 1; }
-        .empty-msg { text-align: center; color: #777; font-size: 1.2em; grid-column: 1 / -1; padding: 50px; background: white; border-radius: 10px;}
+        .promo-banner { background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); border-radius: 16px; padding: 20px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 25px; color: white; box-shadow: 0 10px 25px rgba(59, 130, 246, 0.3); overflow: hidden; position: relative; }
+        .promo-text { position: relative; z-index: 2; }
+        .promo-text h3 { margin: 0 0 5px 0; font-size: 20px; font-weight: 900; }
+        .promo-text p { margin: 0; font-size: 13px; opacity: 0.9; font-weight: 500; }
+        .promo-btn { background: #fbbf24; color: #92400e; font-weight: 800; padding: 8px 18px; border-radius: 20px; font-size: 13px; text-transform: uppercase; box-shadow: 0 4px 10px rgba(251, 191, 36, 0.4); position: relative; z-index: 2; cursor: pointer; }
+        .promo-bg-icon { position: absolute; right: -10px; top: -20px; font-size: 100px; opacity: 0.1; transform: rotate(-15deg); }
+
+        .grid-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 15px; max-width: 1100px; margin: 0 auto; }
+        @media(min-width: 768px) { .grid-container { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; } }
+        .card { background: #ffffff; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.04); border: 1px solid #e2e8f0; overflow: hidden; transition: all 0.3s; cursor: pointer; text-align: left; display: flex; flex-direction: column; position: relative; }
+        .card:hover { transform: translateY(-4px); box-shadow: 0 12px 25px rgba(0,0,0,0.1); border-color: #cbd5e0; }
+        .card img { width: 100%; height: 160px; object-fit: contain; background: #f8fafc; padding: 15px; box-sizing: border-box; border-bottom: 1px solid #edf2f7; transition: transform 0.5s; }
+        .card:hover img { transform: scale(1.05); }
+        .card-content { padding: 12px; display: flex; flex-direction: column; flex-grow: 1; }
+        .card-title { font-size: 14px; font-weight: 600; margin-bottom: 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; color: #2d3748; line-height: 1.4; height: 40px; }
+        .card-rating { font-size: 11px; color: #fbbf24; margin-bottom: 6px; display: flex; align-items: center; gap: 4px; }
+        .rating-count { color: #718096; }
+        .price-row { display: flex; align-items: baseline; gap: 6px; margin-bottom: 6px; flex-wrap: wrap; }
+        .card-price { color: #0f1111; font-size: 18px; font-weight: 800; }
+        .card-mrp { font-size: 12px; color: #718096; text-decoration: line-through; }
+        .card-discount { font-size: 12px; color: #059669; font-weight: 800; background: #d1fae5; padding: 2px 6px; border-radius: 4px; }
+        .delivery-info { font-size: 11px; color: #4a5568; margin-bottom: 10px; font-weight: 600; display: flex; align-items: center; gap: 4px; flex-grow: 1; }
+        .discount-badge-top { position: absolute; top: 10px; left: 10px; background: #ef4444; color: white; font-size: 10px; font-weight: bold; padding: 4px 8px; border-radius: 6px; z-index: 2; box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4); }
+        .empty-msg { text-align: center; color: #718096; font-size: 1.1em; grid-column: 1 / -1; padding: 40px; background: white; border-radius: 12px; border: 1px dashed #cbd5e0; font-weight: 600;}
         
         /* Modern Modal Gallery CSS */
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(15,23,42,0.75); backdrop-filter: blur(5px); }
@@ -206,8 +229,8 @@
         .whatsapp-btn { background: #25D366; color: white; text-align: center; padding: 12px; border-radius: 12px; text-decoration: none; font-size: 16px; font-weight: bold; box-shadow: 0 4px 15px rgba(37, 211, 102, 0.3); transition: 0.3s; }
         .whatsapp-btn:hover { background: #1ebd5c; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(37, 211, 102, 0.4); }
         
-        .add-to-cart-btn { background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%); color: white; text-align: center; padding: 12px; border-radius: 12px; font-size: 16px; font-weight: bold; border: none; cursor: pointer; margin-top: 10px; width: 100%; box-shadow: 0 4px 15px rgba(221, 107, 32, 0.3); transition: all 0.3s; }
-        .add-to-cart-btn:hover { background: linear-gradient(135deg, #dd6b20 0%, #c05621 100%); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(221, 107, 32, 0.4); }
+        .add-to-cart-btn { background: #ffd814; color: #0f1111; text-align: center; padding: 10px; border-radius: 100px; font-size: 14px; font-weight: 700; border: 1px solid #fcd200; cursor: pointer; width: 100%; box-shadow: 0 2px 5px rgba(213,217,217,.5); transition: all 0.2s; }
+        .add-to-cart-btn:hover { background: #f7ca00; border-color: #f2c200; transform: translateY(-1px); box-shadow: 0 4px 8px rgba(213,217,217,.6); }
     </style>
 </head>
 <body>
@@ -222,24 +245,41 @@
 
     {% if is_shop_view %}
     <!-- पब्लिक शॉप व्यू (Customer View) -->
-    <div class="customer-top-bar">
-        <div style="font-weight: 800; font-size: 16px;" class="lang-text" data-hi="🛒 शॉप व्यू" data-en="🛒 Shop View">🛒 शॉप व्यू</div>
-        <div style="display: flex; gap: 10px;">
-            <button onclick="shareShop()" style="background: rgba(255,255,255,0.2); border: none; color: white; border-radius: 20px; padding: 8px 15px; font-weight: bold; cursor: pointer; font-size: 13px; transition: 0.3s;"><span style="margin-right: 5px;">📤</span> <span class="lang-text" data-hi="शेयर" data-en="Share">शेयर</span></button>
-            <a href="/">
-                {% if session.get('shop_name') == shop_name %}
-                    <span class="lang-text" data-hi="🔙 वापस" data-en="🔙 Back">🔙 वापस</span>
-                {% else %}
-                    <span class="lang-text" data-hi="🏠 बनाएं" data-en="🏠 Create">🏠 बनाएं</span>
+    <!-- Amazon/Flipkart Style Header -->
+    <div class="ecommerce-header">
+        <div class="ecommerce-top">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                {% if session.get('shop_name') %}
+                    <a href="/" style="color: #64748b; font-size: 20px; text-decoration: none;">🔙</a>
                 {% endif %}
-            </a>
+                <a href="#" style="text-decoration: none;" class="shop-logo">
+                    <div style="background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%); color: white; width: 36px; height: 36px; border-radius: 10px; display: flex; justify-content: center; align-items: center; font-size: 18px; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3);">🛍️</div>
+                    {{ shop_name }}
+                </a>
+            </div>
+            <div class="header-actions">
+                <button onclick="shareShop()" class="header-icon-btn">📤</button>
+                <div class="header-icon-btn" onclick="openCartModal()">
+                    🛒
+                    <span class="cart-badge-header" id="headerCartCount">0</span>
+                </div>
+            </div>
+        </div>
+        <div class="search-container">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="searchInput" onkeyup="applyFilters()" data-hi-placeholder="क्या ढूंढ रहे हैं? यहाँ सर्च करें..." data-en-placeholder="What are you looking for? Search here..." placeholder="क्या ढूंढ रहे हैं? यहाँ सर्च करें..." class="search-input">
         </div>
     </div>
-    <div class="shop-hero">
-        <h1>🛍️ {{ shop_name }}</h1>
-        <p class="lang-text" data-hi="हमारे बेहतरीन प्रोडक्ट्स की लिस्ट नीचे देखें" data-en="Check out our best products below">हमारे बेहतरीन प्रोडक्ट्स की लिस्ट नीचे देखें</p>
-        <div style="max-width: 600px; margin: 25px auto 0; position: relative;">
-            <input type="text" id="searchInput" onkeyup="applyFilters()" data-hi-placeholder="🔍 प्रोडक्ट का नाम सर्च करें..." data-en-placeholder="🔍 Search for a product..." placeholder="🔍 प्रोडक्ट का नाम सर्च करें..." style="width: 100%; padding: 15px 20px; border-radius: 25px; border: none; box-shadow: 0 8px 20px rgba(0,0,0,0.15); font-size: 16px; outline: none;">
+    
+    <!-- Promo Banner -->
+    <div class="promo-banner">
+        <div class="promo-bg-icon">🎁</div>
+        <div class="promo-text">
+            <h3 class="lang-text" data-hi="सुपर धमाका सेल 🚀" data-en="Super Mega Sale 🚀">सुपर धमाका सेल 🚀</h3>
+            <p class="lang-text" data-hi="बेहतरीन प्रोडक्ट्स पर शानदार ऑफर!" data-en="Amazing offers on best products!">बेहतरीन प्रोडक्ट्स पर शानदार ऑफर!</p>
+        </div>
+        <div class="promo-btn lang-text" data-hi="अभी देखें" data-en="Explore">अभी देखें</div>
+    </div>
         </div>
     </div>
     
@@ -268,30 +308,35 @@
                 {% set first_img = images[0].replace('\\', '/') %}
                 <img src="{% if first_img.startswith('http') %}{{ first_img }}{% else %}/{{ first_img }}{% endif %}" alt="{{ p.product }}" loading="lazy" decoding="async">
                 {% endif %}
+                
+                {% if p.price and p.price|float > 0 %}
+                <div class="discount-badge-top lang-text" data-hi="15% छूट" data-en="15% OFF">15% छूट</div>
+                {% endif %}
+            
                 <div class="card-content">
-                    <div class="card-title"><span style="font-size: 12px; color: #aaa; float: right;">#{{ p.product_id }}</span>{{ p.product }}</div>
-                    <div class="card-price">₹{{ p.price }}</div>
-                    <div class="card-details" style="margin-bottom: 10px;">
-                        <div style="margin-bottom: 5px;">
-                            {% if shop_category == 'electronics' %}<span class="lang-text" data-hi="ब्रांड/वारंटी:" data-en="Brand/Warranty:">ब्रांड/वारंटी:</span>
-                            {% elif shop_category in ['clothing', 'footwear'] %}<span class="lang-text" data-hi="साइज:" data-en="Size:">साइज:</span>
-                            {% elif shop_category in ['grocery', 'pharmacy'] %}<span class="lang-text" data-hi="पैकेज/वजन:" data-en="Pack/Weight:">पैकेज/वजन:</span>
-                            {% elif shop_category == 'furniture' %}<span class="lang-text" data-hi="मटेरियल/रंग:" data-en="Material/Color:">मटेरियल/रंग:</span>
-                            {% else %}<span class="lang-text" data-hi="विवरण:" data-en="Details:">विवरण:</span>
-                            {% endif %} <b>{{ p.size }}</b> 
-                        </div>
-                        <div><span class="lang-text" data-hi="स्टॉक:" data-en="Stock:">स्टॉक:</span> 
-                            {% if p.quantity > 0 %}
-                                <span style="background: #e6fffa; color: #38a169; padding: 2px 8px; border-radius: 12px; font-size: 12px;"><b style="color:#2f855a;">{{ p.quantity }}</b> <span class="lang-text" data-hi="उपलब्ध" data-en="Available">उपलब्ध</span></span>
-                            {% else %}
-                                <span style="background: #fee2e2; color: #e53e3e; padding: 2px 8px; border-radius: 12px; font-size: 12px;"><b class="lang-text" data-hi="आउट ऑफ स्टॉक" data-en="Out of Stock">Out of Stock</b></span>
-                            {% endif %}
-                        </div>
+                    <div class="card-title">{{ p.product }}</div>
+                
+                    <div class="card-rating">
+                        ⭐⭐⭐⭐<span style="color:#e2e8f0;">⭐</span>
+                        <span class="rating-count">({{ range(15, 300) | random }})</span>
                     </div>
+                
+                    <div class="price-row">
+                        <span class="card-price">₹{{ p.price }}</span>
+                        {% if p.price and p.price|float > 0 %}
+                        <span class="card-mrp">₹{{ (p.price|float * 1.15)|int }}</span>
+                        <span class="card-discount lang-text" data-hi="15% की बचत" data-en="15% off">15% off</span>
+                        {% endif %}
+                    </div>
+                
+                    <div class="delivery-info">
+                        <span style="color:#059669; font-weight:900;">✓</span> <span class="lang-text" data-hi="फ्री डिलीवरी" data-en="Free Delivery">फ्री डिलीवरी</span> • <span style="color:#718096; margin-left:4px; font-size: 10px;">{{ p.size }}</span>
+                    </div>
+                
                     {% if p.quantity > 0 %}
-                        <button class="add-to-cart-btn lang-text" data-hi="🛒 कार्ट में डालें" data-en="🛒 Add to Cart" style="padding: 10px; font-size: 14px;" onclick="addToCart('{{ (p.product or '')|replace('\'', '\\\'')|e }}', '{{ p.price }}', '{{ (p.size or '')|replace('\'', '\\\'')|e }}', '{{ p.product_id }}', event)">🛒 कार्ट में डालें</button>
+                        <button class="add-to-cart-btn lang-text" data-hi="कार्ट में डालें" data-en="Add to Cart" onclick="addToCart('{{ (p.product or '')|replace('\'', '\\\'')|e }}', '{{ p.price }}', '{{ (p.size or '')|replace('\'', '\\\'')|e }}', '{{ p.product_id }}', event)">कार्ट में डालें</button>
                     {% else %}
-                        <button class="add-to-cart-btn lang-text" data-hi="🚫 आउट ऑफ स्टॉक" data-en="🚫 Out of Stock" style="padding: 10px; font-size: 14px; background: #e2e8f0; color: #a0aec0; cursor: not-allowed; box-shadow: none;" disabled>🚫 आउट ऑफ स्टॉक</button>
+                        <button class="add-to-cart-btn lang-text" data-hi="आउट ऑफ स्टॉक" data-en="Out of Stock" style="background: #f1f5f9; color: #94a3b8; border-color: #e2e8f0; cursor: not-allowed; box-shadow: none;" disabled>आउट ऑफ स्टॉक</button>
                     {% endif %}
                 </div>
             </div>
@@ -531,6 +576,8 @@
             });
             
             cartCount.innerText = count;
+            const headerCartCount = document.getElementById('headerCartCount');
+            if (headerCartCount) headerCartCount.innerText = count;
             cartTotal.innerText = total;
             updateUI(); // To translate dynamically injected text
             
