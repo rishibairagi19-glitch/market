@@ -699,9 +699,18 @@
 
             <div class="form-group">
                 <label class="lang-text" data-hi="📸 प्रोडक्ट की फोटो (Image):" data-en="📸 Product Images:">📸 प्रोडक्ट की फोटो (Image):</label>
-                <input type="file" name="product_image" accept="image/*" multiple required onchange="previewImages(event)">
-                <small class="lang-text" data-hi="एक से ज़्यादा फोटो चुनने के लिए Ctrl दबाएं या मोबाइल में Long Press करें।" data-en="Press Ctrl or Long Press on mobile to select multiple photos." style="color: #7f8c8d; font-size: 12px; text-transform: none;">एक से ज़्यादा फोटो चुनने के लिए Ctrl दबाएं या मोबाइल में Long Press करें。</small>
-                <div id="imagePreview" style="display: flex; gap: 10px; margin-top: 10px; overflow-x: auto;"></div>
+                
+                <div id="multiImagePreviewContainer" style="display: flex; gap: 12px; overflow-x: auto; padding: 5px 0;">
+                    <!-- + वाला बटन -->
+                    <div id="addPhotoBox" class="add-photo-box">
+                        <span style="font-size: 28px; color: #a0aec0; font-weight: bold;">+</span>
+                        <input type="file" id="dynamicImageInput" accept="image/*" required style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer;" onchange="handleNewImage(this)">
+                    </div>
+                </div>
+                
+                <div id="hiddenInputsContainer" style="display: none;"></div>
+                
+                <small class="lang-text" data-hi="आप एक-एक करके + बटन दबाकर और भी फोटो जोड़ सकते हैं।" data-en="You can add more photos one by one by pressing + button." style="color: #7f8c8d; font-size: 12px;">आप एक-एक करके + बटन दबाकर और भी फोटो जोड़ सकते हैं।</small>
             </div>
 
             <button type="submit" class="submit-product-btn lang-text" data-hi="🚀 प्रोडक्ट सेव करें" data-en="🚀 Save Product">🚀 प्रोडक्ट सेव करें</button>
@@ -712,25 +721,83 @@
     </div>
     
     <script>
-        // दुकानदार को अपलोड की गई फोटो का प्रीव्यू दिखाने के लिए
-        function previewImages(event) {
-            const previewContainer = document.getElementById('imagePreview');
-            previewContainer.innerHTML = '';
-            const files = event.target.files;
-            for (let i = 0; i < files.length; i++) {
-                const file = files[i];
-                if(file) {
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        const img = document.createElement('img');
-                        img.src = e.target.result;
-                        img.style.height = '60px';
-                        img.style.borderRadius = '5px';
-                        img.style.border = '1px solid #ddd';
-                        previewContainer.appendChild(img);
-                    }
-                    reader.readAsDataURL(file);
+        // दुकानदार को एक-एक करके (Instagram Style) फोटो अपलोड करने का फंक्शन
+        function handleNewImage(inputElement) {
+            if(inputElement.files && inputElement.files[0]) {
+                const file = inputElement.files[0];
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    const imgWrap = document.createElement('div');
+                    imgWrap.style.position = 'relative';
+                    imgWrap.style.width = '75px';
+                    imgWrap.style.height = '75px';
+                    imgWrap.style.flexShrink = '0';
+                    
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.style.width = '100%';
+                    img.style.height = '100%';
+                    img.style.objectFit = 'cover';
+                    img.style.borderRadius = '12px';
+                    img.style.border = '1px solid #e2e8f0';
+                    
+                    const removeBtn = document.createElement('span');
+                    removeBtn.innerHTML = '×';
+                    removeBtn.style.position = 'absolute';
+                    removeBtn.style.top = '-6px';
+                    removeBtn.style.right = '-6px';
+                    removeBtn.style.background = '#e53e3e';
+                    removeBtn.style.color = 'white';
+                    removeBtn.style.width = '20px';
+                    removeBtn.style.height = '20px';
+                    removeBtn.style.borderRadius = '50%';
+                    removeBtn.style.display = 'flex';
+                    removeBtn.style.alignItems = 'center';
+                    removeBtn.style.justifyContent = 'center';
+                    removeBtn.style.fontSize = '14px';
+                    removeBtn.style.fontWeight = 'bold';
+                    removeBtn.style.cursor = 'pointer';
+                    removeBtn.style.boxShadow = '0 2px 5px rgba(0,0,0,0.2)';
+                    
+                    inputElement.name = 'product_image'; 
+                    inputElement.removeAttribute('required'); 
+                    inputElement.id = ''; 
+                    inputElement.style.display = 'none';
+                    
+                    const hiddenInputsContainer = document.getElementById('hiddenInputsContainer');
+                    hiddenInputsContainer.appendChild(inputElement);
+                    
+                    const addBox = document.getElementById('addPhotoBox');
+                    const newInput = document.createElement('input');
+                    newInput.type = 'file';
+                    newInput.id = 'dynamicImageInput';
+                    newInput.accept = 'image/*';
+                    newInput.style.position = 'absolute';
+                    newInput.style.top = '0';
+                    newInput.style.left = '0';
+                    newInput.style.width = '100%';
+                    newInput.style.height = '100%';
+                    newInput.style.opacity = '0';
+                    newInput.style.cursor = 'pointer';
+                    newInput.onchange = function() { handleNewImage(this); };
+                    addBox.appendChild(newInput);
+                    
+                    removeBtn.onclick = function() {
+                        imgWrap.remove();
+                        inputElement.remove();
+                        if(hiddenInputsContainer.children.length === 0) {
+                            document.getElementById('dynamicImageInput').required = true;
+                        }
+                    };
+                    
+                    imgWrap.appendChild(img);
+                    imgWrap.appendChild(removeBtn);
+                    
+                    const previewContainer = document.getElementById('multiImagePreviewContainer');
+                    previewContainer.insertBefore(imgWrap, addBox);
                 }
+                reader.readAsDataURL(file);
             }
         }
     </script>
