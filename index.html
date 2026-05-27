@@ -218,8 +218,12 @@
         .close-btn { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; margin-top: -10px; }
         .close-btn:hover, .close-btn:focus { color: #000; text-decoration: none; }
         
-        .modal-gallery { margin-bottom: 25px; }
-        #mainModalImage { width: 100%; height: 320px; object-fit: cover; border-radius: 16px; box-shadow: 0 8px 25px rgba(0,0,0,0.1); transition: opacity 0.2s ease-in-out; background: #f7fafc; }
+        .product-modal-content { padding: 0 !important; overflow: hidden; max-width: 450px !important; }
+        .modal-gallery { margin-bottom: 0; background: #ffffff; padding: 20px 20px 10px; border-bottom: 1px solid #edf2f7; position: relative; }
+        #mainModalImage { width: 100%; height: 300px; object-fit: contain; border-radius: 0; box-shadow: none; transition: opacity 0.2s ease-in-out; background: transparent; }
+        .modal-divider { border-top: 1px solid #edf2f7; border-bottom: 1px solid #edf2f7; }
+        body.dark-mode .modal-gallery { background: #1e293b; border-bottom-color: #334155; }
+        body.dark-mode .modal-divider { border-color: #334155; }
         .thumbnail-strip { display: flex; gap: 12px; overflow-x: auto; margin-top: 15px; padding: 5px; scroll-behavior: smooth; }
         .thumbnail-strip::-webkit-scrollbar { height: 6px; }
         .thumbnail-strip::-webkit-scrollbar-thumb { background: #cbd5e0; border-radius: 10px; }
@@ -348,25 +352,70 @@
 
     <!-- Product Detail Modal -->
     <div id="productModal" class="modal">
-        <div class="modal-content">
-            <span class="close-btn" onclick="closeProductModal()">&times;</span>
+        <div class="modal-content product-modal-content">
+            <span class="close-btn" onclick="closeProductModal()" style="position: absolute; top: 15px; right: 15px; background: rgba(255,255,255,0.9); width: 34px; height: 34px; border-radius: 50%; display: flex; justify-content: center; align-items: center; z-index: 10; font-size: 24px; box-shadow: 0 2px 10px rgba(0,0,0,0.15); color: #000; margin: 0; line-height: 1;">&times;</span>
             
             <div class="modal-gallery">
+                <div class="discount-badge-top lang-text" data-hi="15% छूट" data-en="15% OFF" style="position: absolute; top: 15px; left: 15px; font-size: 12px; padding: 5px 10px;">15% OFF</div>
                 <img id="mainModalImage" src="" alt="Product">
                 <div class="thumbnail-strip" id="modalThumbnails"></div>
             </div>
             
-            <div id="modalTitle" style="font-size: 24px; font-weight: 800; color: #1a202c; margin-bottom: 5px;"></div>
-            <div id="modalPrice" style="font-size: 28px; font-weight: 900; color: #38a169; margin-bottom: 20px;"></div>
-            
-            <div style="background: #f7fafc; border: 1px solid #edf2f7; border-radius: 16px; padding: 15px; margin-bottom: 25px;">
-                <div style="margin-bottom: 8px; color: #4a5568;"><b class="lang-text" data-hi="विवरण:" data-en="Details:">विवरण:</b> <span id="modalSize" style="color: #2d3748; font-weight: 600;"></span></div>
-                <div style="color: #4a5568;"><b class="lang-text" data-hi="स्टॉक:" data-en="Stock:">स्टॉक:</b> <span id="modalQuantity" style="background: #e6fffa; color: #38a169; padding: 3px 10px; border-radius: 20px; font-weight: bold; font-size: 13px;"></span></div>
-            </div>
-            
-            <div style="display: flex; gap: 12px;">
-                <button id="modalAddToCart" class="add-to-cart-btn lang-text" data-hi="🛒 कार्ट में डालें" data-en="🛒 Add to Cart" onclick="addCurrentToCart()" style="margin: 0; flex: 1; border-radius: 14px;">🛒 कार्ट में डालें</button>
-                <a href="#" id="modalWhatsapp" class="whatsapp-btn" target="_blank" style="margin: 0; flex: 1; display: flex; align-items: center; justify-content: center; border-radius: 14px;">💬 WhatsApp</a>
+            <div style="padding: 20px;">
+                <div id="modalTitle" class="card-title" style="font-size: 16px; font-weight: 600; line-height: 1.4; margin-bottom: 8px; height: auto; -webkit-line-clamp: unset;"></div>
+                
+                <div class="card-rating" style="font-size: 13px; margin-bottom: 12px;">
+                    ⭐⭐⭐⭐<span style="color:#e2e8f0;">⭐</span>
+                    <span style="color: #3b82f6; font-weight: 600; margin-left: 5px;">(4.2) • <span id="randomRatingCount">234</span> <span class="lang-text" data-hi="रेटिंग्स" data-en="ratings">ratings</span></span>
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                    <div style="display: flex; align-items: baseline; gap: 8px;">
+                        <span style="font-size: 28px; font-weight: 800; color: #e53e3e;" id="modalPrice"></span>
+                        <span style="font-size: 14px; color: #718096; text-decoration: line-through;" id="modalMrp"></span>
+                    </div>
+                    <div style="font-size: 12px; color: #718096; font-weight: 500;" class="lang-text" data-hi="सभी टैक्स सहित" data-en="Inclusive of all taxes">Inclusive of all taxes</div>
+                </div>
+                
+                <div class="modal-divider" style="padding: 15px 0; margin-bottom: 15px; display: flex; gap: 10px; justify-content: space-between;">
+                    <div style="text-align: center; flex: 1;">
+                        <div style="font-size: 22px; margin-bottom: 5px;">🚚</div>
+                        <div style="font-size: 10px; color: #718096; font-weight: 700; line-height: 1.2;" class="lang-text" data-hi="फ्री<br>डिलीवरी" data-en="Free<br>Delivery">Free<br>Delivery</div>
+                    </div>
+                    <div style="text-align: center; flex: 1;">
+                        <div style="font-size: 22px; margin-bottom: 5px;">🔄</div>
+                        <div style="font-size: 10px; color: #718096; font-weight: 700; line-height: 1.2;" class="lang-text" data-hi="7 दिन<br>रिप्लेसमेंट" data-en="7 Days<br>Replacement">7 Days<br>Replacement</div>
+                    </div>
+                    <div style="text-align: center; flex: 1;">
+                        <div style="font-size: 22px; margin-bottom: 5px;">🛡️</div>
+                        <div style="font-size: 10px; color: #718096; font-weight: 700; line-height: 1.2;" class="lang-text" data-hi="1 साल<br>वारंटी" data-en="1 Year<br>Warranty">1 Year<br>Warranty</div>
+                    </div>
+                    <div style="text-align: center; flex: 1;">
+                        <div style="font-size: 22px; margin-bottom: 5px;">🏆</div>
+                        <div style="font-size: 10px; color: #718096; font-weight: 700; line-height: 1.2;" class="lang-text" data-hi="टॉप<br>ब्रांड" data-en="Top<br>Brand">Top<br>Brand</div>
+                    </div>
+                </div>
+                
+                <div style="margin-bottom: 20px;">
+                    <table style="width: 100%; font-size: 14px; border-collapse: collapse;">
+                        <tr>
+                            <td style="padding: 5px 0; color: #718096; font-weight: 600; width: 35%;" class="lang-text" data-hi="विवरण (Details):" data-en="Details:">विवरण (Details):</td>
+                            <td style="padding: 5px 0; font-weight: 600;" id="modalSize" class="card-title"></td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 5px 0; color: #718096; font-weight: 600;" class="lang-text" data-hi="उपलब्धता (Stock):" data-en="Availability:">उपलब्धता (Stock):</td>
+                            <td style="padding: 5px 0; font-weight: bold;" id="modalQuantity"></td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <button id="modalAddToCart" class="add-to-cart-btn lang-text" data-hi="कार्ट में डालें" data-en="Add to Cart" onclick="addCurrentToCart()" style="padding: 14px; font-size: 15px;">कार्ट में डालें</button>
+                    <a href="#" id="modalWhatsapp" class="whatsapp-btn" target="_blank" style="border-radius: 100px; padding: 14px; font-size: 15px; background: #ffa41c; border: 1px solid #ff8f00; color: #0f1111; box-shadow: 0 2px 5px rgba(213,217,217,.5); display: flex; justify-content: center; align-items: center; gap: 8px; font-weight: 700; text-decoration: none;">
+                        <span style="color: #0f1111; font-size: 18px;">💬</span>
+                        <span class="lang-text" data-hi="WhatsApp पर पूछें" data-en="Ask on WhatsApp">WhatsApp पर पूछें</span>
+                    </a>
+                </div>
             </div>
         </div>
     </div>
@@ -454,10 +503,22 @@
             const productId = element.getAttribute('data-product-id');
             const imageUrls = element.getAttribute('data-images');
 
-            document.getElementById('modalTitle').innerText = title + ' (ID: ' + (productId || 'N/A') + ')';
+            document.getElementById('modalTitle').innerText = title;
             document.getElementById('modalPrice').innerText = '₹' + price;
-            document.getElementById('modalSize').innerText = size;
-            document.getElementById('modalQuantity').innerText = quantity;
+              
+        let mrp = Math.round(parseFloat(price) * 1.15);
+        document.getElementById('modalMrp').innerText = 'M.R.P: ₹' + mrp;
+        document.getElementById('randomRatingCount').innerText = Math.floor(Math.random() * 400) + 20;
+        
+        document.getElementById('modalSize').innerText = size || (currentLang === 'hi' ? 'कोई विवरण नहीं' : 'No details');
+        const qtyElem = document.getElementById('modalQuantity');
+        if (parseInt(quantity) > 0) {
+            qtyElem.innerText = currentLang === 'hi' ? '✅ स्टॉक में है' : '✅ In Stock';
+            qtyElem.style.color = '#059669';
+        } else {
+            qtyElem.innerText = currentLang === 'hi' ? '❌ आउट ऑफ स्टॉक' : '❌ Out of Stock';
+            qtyElem.style.color = '#e53e3e';
+        }
             
             currentProduct = { title: title, price: parseFloat(price), size: size, id: productId };
 
@@ -501,16 +562,18 @@
 
             const addToCartBtn = document.getElementById('modalAddToCart');
             if (parseInt(quantity) <= 0) {
-                addToCartBtn.innerText = currentLang === 'hi' ? '🚫 आउट ऑफ स्टॉक' : '🚫 Out of Stock';
-                addToCartBtn.style.background = '#e2e8f0';
-                addToCartBtn.style.color = '#a0aec0';
+                addToCartBtn.innerText = currentLang === 'hi' ? 'आउट ऑफ स्टॉक' : 'Out of Stock';
+                addToCartBtn.style.background = '#f1f5f9';
+                addToCartBtn.style.borderColor = '#e2e8f0';
+                addToCartBtn.style.color = '#94a3b8';
                 addToCartBtn.style.boxShadow = 'none';
                 addToCartBtn.disabled = true;
             } else {
-                addToCartBtn.innerText = currentLang === 'hi' ? '🛒 कार्ट में डालें' : '🛒 Add to Cart';
-                addToCartBtn.style.background = '';
-                addToCartBtn.style.color = '';
-                addToCartBtn.style.boxShadow = '';
+                addToCartBtn.innerText = currentLang === 'hi' ? 'कार्ट में डालें' : 'Add to Cart';
+                addToCartBtn.style.background = '#ffd814';
+                addToCartBtn.style.borderColor = '#fcd200';
+                addToCartBtn.style.color = '#0f1111';
+                addToCartBtn.style.boxShadow = '0 2px 5px rgba(213,217,217,.5)';
                 addToCartBtn.disabled = false;
             }
 
