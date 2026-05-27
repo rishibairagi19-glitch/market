@@ -737,6 +737,41 @@
     </div>
 
     <div id="profile_tab" {% if active_admin_tab != 'profile_tab' %}style="display: none;"{% endif %}>
+          
+        <!-- Settings Menu View -->
+        <div id="settings_menu_view">
+            <div class="settings-card" style="margin-top: 0;">
+                <h3 style="margin-top: 0; color: #1a202c; font-size: 20px; border-bottom: 2px solid #edf2f7; padding-bottom: 15px; margin-bottom: 10px;" class="lang-text" data-hi="⚙️ सेटिंग्स" data-en="⚙️ Settings">⚙️ सेटिंग्स</h3>
+                
+                <div class="settings-item" onclick="document.getElementById('settings_menu_view').style.display='none'; document.getElementById('profile_details_view').style.display='block';">
+                    <span class="lang-text" data-hi="👤 मेरी प्रोफाइल (My Profile)" data-en="👤 My Profile">👤 मेरी प्रोफाइल (My Profile)</span>
+                    <span>▶</span>
+                </div>
+                <div class="settings-item" onclick="toggleDarkMode()">
+                    <span id="darkModeBtnList">🌙 डार्क मोड (Dark Mode)</span>
+                    <span>▶</span>
+                </div>
+                <div class="settings-item" onclick="toggleLanguage()">
+                    <span id="langBtnList">🌐 English / हिन्दी</span>
+                    <span>▶</span>
+                </div>
+                <div class="settings-item" onclick="contactSupport()">
+                    <span class="lang-text" data-hi="❓ सहायता (Need Help?)" data-en="❓ Need Help?">❓ सहायता (Need Help?)</span>
+                    <span>▶</span>
+                </div>
+                <a href="/logout" onclick="document.getElementById('global-loader').style.display='flex';" class="settings-item" style="color: #e53e3e;">
+                    <span class="lang-text" data-hi="🚪 लॉगआउट (Logout)" data-en="🚪 Logout">🚪 लॉगआउट (Logout)</span>
+                    <span>▶</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Profile Details View -->
+        <div id="profile_details_view" style="display: none;">
+            <div style="margin-bottom: 15px;">
+                <button onclick="document.getElementById('settings_menu_view').style.display='block'; document.getElementById('profile_details_view').style.display='none';" style="background: #e2e8f0; color: #4a5568; border: none; padding: 8px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 5px; width: auto; margin-top: 0;">🔙 <span class="lang-text" data-hi="वापस" data-en="Back">वापस</span></button>
+            </div>
+
         <!-- प्रोफाइल मेन कार्ड -->
         <div class="profile-card">
             <!-- कवर इमेज और अवतार -->
@@ -801,26 +836,7 @@
             </div>
         </div>
 
-        <!-- Settings Section -->
-        <div class="settings-card">
-            <h3 style="margin-top: 0; color: #1a202c; font-size: 18px; border-bottom: 2px solid #edf2f7; padding-bottom: 10px;" class="lang-text" data-hi="⚙️ अन्य सेटिंग्स" data-en="⚙️ Other Settings">⚙️ अन्य सेटिंग्स</h3>
-            <div class="settings-item" onclick="toggleDarkMode()">
-                <span id="darkModeBtnList">🌙 डार्क मोड (Dark Mode)</span>
-                <span>▶</span>
-            </div>
-            <div class="settings-item" onclick="toggleLanguage()">
-                <span id="langBtnList">🌐 English / हिन्दी</span>
-                <span>▶</span>
-            </div>
-            <div class="settings-item" onclick="contactSupport()">
-                <span class="lang-text" data-hi="❓ सहायता (Need Help?)" data-en="❓ Need Help?">❓ सहायता (Need Help?)</span>
-                <span>▶</span>
-            </div>
-            <a href="/logout" onclick="document.getElementById('global-loader').style.display='flex';" class="settings-item" style="color: #e53e3e;">
-                <span class="lang-text" data-hi="🚪 लॉगआउट (Logout)" data-en="🚪 Logout">🚪 लॉगआउट (Logout)</span>
-                <span>▶</span>
-            </a>
-        </div>
+        </div> <!-- End of profile_details_view -->
     </div>
 
     <div id="manage_products_tab" {% if active_admin_tab != 'manage_products_tab' %}style="display: none;"{% endif %}>
@@ -1008,7 +1024,17 @@
             document.getElementById('manage_products_tab').style.display = 'none';
             document.getElementById('orders_tab').style.display = 'none';
             document.getElementById(tabName).style.display = 'block';
-            
+
+             // Reset Settings View when opening Settings tab
+            if (tabName === 'profile_tab') {
+                const settingsMenu = document.getElementById('settings_menu_view');
+                const profileDetails = document.getElementById('profile_details_view');
+                if (settingsMenu && profileDetails) {
+                    settingsMenu.style.display = 'block';
+                    profileDetails.style.display = 'none';
+                }
+            }
+
             // Bottom Nav Active State
             if (element) {
                 document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
