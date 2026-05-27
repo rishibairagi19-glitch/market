@@ -37,6 +37,7 @@ def logout():
 def index():
     success_msg = None
     active_admin_tab = "add_product_tab"
+    active_tab = "login"
 
     if request.method == "POST":
         action = request.form.get("action")
@@ -66,15 +67,32 @@ def index():
                     break
 
             # Supabase में नया यूज़र (दुकानदार) सेव करें
-            supabase.table("shop_owners").insert({
-                "owner_name": owner_name,
-                "shop_name": shop_name,
-                "mobile_number": mobile_number,
-                "password": password,
-                "shop_id": shop_id,
-                "main_category": main_category,
-                "category": category
-            }).execute()
+            try:
+                supabase.table("shop_owners").insert({
+                    "owner_name": owner_name,
+                    "shop_name": shop_name,
+                    "mobile_number": mobile_number,
+                    "password": password,
+                    "shop_id": shop_id,
+                    "main_category": main_category,
+                    "category": category
+                }).execute()
+            except Exception as e:
+                # अगर डेटाबेस में 'main_category' कॉलम नहीं है, तो उसके बिना सेव करें ताकि ऐप क्रैश न हो
+                if "main_category" in str(e):
+                    try:
+                        supabase.table("shop_owners").insert({
+                            "owner_name": owner_name,
+                            "shop_name": shop_name,
+                            "mobile_number": mobile_number,
+                            "password": password,
+                            "shop_id": shop_id,
+                            "category": category
+                        }).execute()
+                    except Exception as fallback_e:
+                        return render_template("index.html", error=f"डेटाबेस एरर: {str(fallback_e)}", active_tab="signup")
+                else:
+                    return render_template("index.html", error=f"साइन-अप एरर: {str(e)}", active_tab="signup")
             
             success_msg = f"<span class='lang-text' data-hi='साइन-अप सफल रहा! आपकी 7-डिजिट की शॉप ID <b>{shop_id}</b> है। आप इस ID या अपने मोबाइल नंबर से लॉगिन कर सकते हैं।' data-en='Sign-up successful! Your 7-digit Shop ID is <b>{shop_id}</b>. You can login using this ID or your mobile number.'>साइन-अप सफल रहा! आपकी 7-डिजिट की शॉप ID <b>{shop_id}</b> है। आप इस ID या अपने मोबाइल नंबर से लॉगिन कर सकते हैं।</span>"
             return render_template("index.html", success=success_msg, active_tab="login")
@@ -219,8 +237,8 @@ def index():
                 return render_template("index.html", error=f"ऑर्डर अपडेट करते समय एरर: {str(e)}")
                 
         elif action == "edit_profile":
-            new_owner_name = request.form.get("owner_name")
-            new_mobile = request.form.get("mobile_number")
+            new_owner_name = request.form.get("owner_name", "").strip()
+            new_mobile = request.form.get("mobile_number", "").strip()
             new_main_category = request.form.get("main_category")
             new_category = request.form.get("category")
             new_password = request.form.get("password")
@@ -278,7 +296,15 @@ def index():
                     except Exception as e:
                         print(f"Error uploading profile pic to Supabase: {e}")
                 
-                supabase.table("shop_owners").update(update_data).eq("shop_name", session["shop_name"]).execute()
+                try:
+                    supabase.table("shop_owners").update(update_data).eq("shop_name", session["shop_name"]).execute()
+                except Exception as e:
+                    # प्रोफाइल अपडेट में भी फॉलबैक लगाएँ
+                    if "main_category" in str(e):
+                        del update_data["main_category"]
+                        supabase.table("shop_owners").update(update_data).eq("shop_name", session["shop_name"]).execute()
+                    else:
+                        raise e
                 
                 session["owner_name"] = new_owner_name
                 session["main_category"] = new_main_category
@@ -312,7 +338,7 @@ def index():
         except Exception:
             pass # In case the orders table hasn't been created yet
             
-    return render_template("index.html", user_products=user_products, user_profile=user_profile, user_orders=user_orders, success=success_msg, active_admin_tab=active_admin_tab, qr_url=qr_url)
+    return render_template("index.html", user_products=user_products, user_profile=user_profile, user_orders=user_orders, success=success_msg, active_admin_tab=active_admin_tab, active_tab=active_tab, qr_url=qr_url)
 
 @app.route("/api/place_order", methods=["POST"])
 def api_place_order():
