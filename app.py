@@ -42,9 +42,9 @@ def index():
         action = request.form.get("action")
         
         if action == "signup":
-            owner_name = request.form.get("owner_name")
-            shop_name = request.form.get("shop_name")
-            mobile_number = request.form.get("mobile_number")
+            owner_name = request.form.get("owner_name", "").strip()
+            shop_name = request.form.get("shop_name", "").strip()
+            mobile_number = request.form.get("mobile_number", "").strip()
             password = request.form.get("password")
             main_category = request.form.get("main_category")
             category = request.form.get("category")
@@ -80,7 +80,7 @@ def index():
             return render_template("index.html", success=success_msg, active_tab="login")
             
         elif action == "login":
-            login_id = request.form.get("login_id")
+            login_id = request.form.get("login_id", "").strip()
             password = request.form.get("password")
             
             # यूज़र को ID या मोबाइल नंबर से ढूँढें
