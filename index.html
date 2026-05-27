@@ -870,78 +870,111 @@
         // दुकानदार को एक-एक करके (Instagram Style) फोटो अपलोड करने का फंक्शन
         function handleNewImage(inputElement) {
             if(inputElement.files && inputElement.files[0]) {
+                document.getElementById('global-loader').style.display = 'flex'; // फोटो कंप्रेस होते समय लोडिंग दिखाएं
                 const file = inputElement.files[0];
                 const reader = new FileReader();
                 
                 reader.onload = function(e) {
-                    const imgWrap = document.createElement('div');
-                    imgWrap.style.position = 'relative';
-                    imgWrap.style.width = '75px';
-                    imgWrap.style.height = '75px';
-                    imgWrap.style.flexShrink = '0';
-                    
-                    const img = document.createElement('img');
-                    img.src = e.target.result;
-                    img.style.width = '100%';
-                    img.style.height = '100%';
-                    img.style.objectFit = 'cover';
-                    img.style.borderRadius = '12px';
-                    img.style.border = '1px solid #e2e8f0';
-                    
-                    const removeBtn = document.createElement('span');
-                    removeBtn.innerHTML = '×';
-                    removeBtn.style.position = 'absolute';
-                    removeBtn.style.top = '-6px';
-                    removeBtn.style.right = '-6px';
-                    removeBtn.style.background = '#e53e3e';
-                    removeBtn.style.color = 'white';
-                    removeBtn.style.width = '20px';
-                    removeBtn.style.height = '20px';
-                    removeBtn.style.borderRadius = '50%';
-                    removeBtn.style.display = 'flex';
-                    removeBtn.style.alignItems = 'center';
-                    removeBtn.style.justifyContent = 'center';
-                    removeBtn.style.fontSize = '14px';
-                    removeBtn.style.fontWeight = 'bold';
-                    removeBtn.style.cursor = 'pointer';
-                    removeBtn.style.boxShadow = '0 2px 5px rgba(0,0,0,0.2)';
-                    
-                    inputElement.name = 'product_image'; 
-                    inputElement.removeAttribute('required'); 
-                    inputElement.id = ''; 
-                    inputElement.style.display = 'none';
-                    
-                    const hiddenInputsContainer = document.getElementById('hiddenInputsContainer');
-                    hiddenInputsContainer.appendChild(inputElement);
-                    
-                    const addBox = document.getElementById('addPhotoBox');
-                    const newInput = document.createElement('input');
-                    newInput.type = 'file';
-                    newInput.id = 'dynamicImageInput';
-                    newInput.accept = 'image/*';
-                    newInput.style.position = 'absolute';
-                    newInput.style.top = '0';
-                    newInput.style.left = '0';
-                    newInput.style.width = '100%';
-                    newInput.style.height = '100%';
-                    newInput.style.opacity = '0';
-                    newInput.style.cursor = 'pointer';
-                    newInput.onchange = function() { handleNewImage(this); };
-                    addBox.appendChild(newInput);
-                    
-                    removeBtn.onclick = function() {
-                        imgWrap.remove();
-                        inputElement.remove();
-                        if(hiddenInputsContainer.children.length === 0) {
-                            document.getElementById('dynamicImageInput').required = true;
+                    const tempImg = new Image();
+                    tempImg.onload = function() {
+                        const canvas = document.createElement('canvas');
+                        let width = tempImg.width;
+                        let height = tempImg.height;
+                        const MAX_SIZE = 800; // फोटो का अधिकतम साइज़ 800px करें
+                        
+                        if (width > height) {
+                            if (width > MAX_SIZE) { height *= MAX_SIZE / width; width = MAX_SIZE; }
+                        } else {
+                            if (height > MAX_SIZE) { width *= MAX_SIZE / height; height = MAX_SIZE; }
                         }
+                        
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(tempImg, 0, 0, width, height);
+                        
+                        canvas.toBlob(function(blob) {
+                            // कंप्रेस की गई फोटो (webp) को फॉर्म में डालें
+                            const newFileName = file.name.replace(/\.[^/.]+$/, "") + ".webp";
+                            const compressedFile = new File([blob], newFileName, { type: 'image/webp' });
+                            const dataTransfer = new DataTransfer();
+                            dataTransfer.items.add(compressedFile);
+                            inputElement.files = dataTransfer.files;
+                            
+                            // --- पुराना UI रेंडर करने का कोड ---
+                            const imgWrap = document.createElement('div');
+                            imgWrap.style.position = 'relative';
+                            imgWrap.style.width = '75px';
+                            imgWrap.style.height = '75px';
+                            imgWrap.style.flexShrink = '0';
+                            
+                            const img = document.createElement('img');
+                            img.src = URL.createObjectURL(blob); // बहुत फ़ास्ट लोड होता है
+                            img.style.width = '100%';
+                            img.style.height = '100%';
+                            img.style.objectFit = 'cover';
+                            img.style.borderRadius = '12px';
+                            img.style.border = '1px solid #e2e8f0';
+                            
+                            const removeBtn = document.createElement('span');
+                            removeBtn.innerHTML = '×';
+                            removeBtn.style.position = 'absolute';
+                            removeBtn.style.top = '-6px';
+                            removeBtn.style.right = '-6px';
+                            removeBtn.style.background = '#e53e3e';
+                            removeBtn.style.color = 'white';
+                            removeBtn.style.width = '20px';
+                            removeBtn.style.height = '20px';
+                            removeBtn.style.borderRadius = '50%';
+                            removeBtn.style.display = 'flex';
+                            removeBtn.style.alignItems = 'center';
+                            removeBtn.style.justifyContent = 'center';
+                            removeBtn.style.fontSize = '14px';
+                            removeBtn.style.fontWeight = 'bold';
+                            removeBtn.style.cursor = 'pointer';
+                            removeBtn.style.boxShadow = '0 2px 5px rgba(0,0,0,0.2)';
+                            
+                            inputElement.name = 'product_image'; 
+                            inputElement.removeAttribute('required'); 
+                            inputElement.id = ''; 
+                            inputElement.style.display = 'none';
+                            
+                            const hiddenInputsContainer = document.getElementById('hiddenInputsContainer');
+                            hiddenInputsContainer.appendChild(inputElement);
+                            
+                            const addBox = document.getElementById('addPhotoBox');
+                            const newInput = document.createElement('input');
+                            newInput.type = 'file';
+                            newInput.id = 'dynamicImageInput';
+                            newInput.accept = 'image/*';
+                            newInput.style.position = 'absolute';
+                            newInput.style.top = '0';
+                            newInput.style.left = '0';
+                            newInput.style.width = '100%';
+                            newInput.style.height = '100%';
+                            newInput.style.opacity = '0';
+                            newInput.style.cursor = 'pointer';
+                            newInput.onchange = function() { handleNewImage(this); };
+                            addBox.appendChild(newInput);
+                            
+                            removeBtn.onclick = function() {
+                                imgWrap.remove();
+                                inputElement.remove();
+                                if(hiddenInputsContainer.children.length === 0) {
+                                    document.getElementById('dynamicImageInput').required = true;
+                                }
+                            };
+                            
+                            imgWrap.appendChild(img);
+                            imgWrap.appendChild(removeBtn);
+                            
+                            const previewContainer = document.getElementById('multiImagePreviewContainer');
+                            previewContainer.insertBefore(imgWrap, addBox);
+                            
+                            document.getElementById('global-loader').style.display = 'none'; // लोडिंग बंद करें
+                        }, 'image/webp', 0.6); // 60% क्वालिटी के साथ WebP में बदलें
                     };
-                    
-                    imgWrap.appendChild(img);
-                    imgWrap.appendChild(removeBtn);
-                    
-                    const previewContainer = document.getElementById('multiImagePreviewContainer');
-                    previewContainer.insertBefore(imgWrap, addBox);
+                    tempImg.src = e.target.result;
                 }
                 reader.readAsDataURL(file);
             }
