@@ -46,6 +46,7 @@ def index():
             shop_name = request.form.get("shop_name")
             mobile_number = request.form.get("mobile_number")
             password = request.form.get("password")
+            main_category = request.form.get("main_category")
             category = request.form.get("category")
             
             # चेक करें कि दुकान का नाम या मोबाइल नंबर पहले से मौजूद तो नहीं है
@@ -71,6 +72,7 @@ def index():
                 "mobile_number": mobile_number,
                 "password": password,
                 "shop_id": shop_id,
+                "main_category": main_category,
                 "category": category
             }).execute()
             
@@ -101,6 +103,7 @@ def index():
             session["owner_name"] = user_data["owner_name"]
             session["shop_name"] = user_data["shop_name"]
             session["shop_id"] = user_data.get("shop_id")
+            session["main_category"] = user_data.get("main_category", "")
             session["category"] = user_data.get("category", "general")
             return redirect(url_for("index"))
                 
@@ -205,24 +208,6 @@ def index():
             except Exception as e:
                 return render_template("index.html", error=f"अपडेट करते समय एरर: {str(e)}")
                 
-        elif action == "toggle_hide":
-            product_id = request.form.get("product_id")
-            try:
-                res = supabase.table("shops").select("*").eq("product_id", product_id).eq("shop_name", session["shop_name"]).execute()
-                if res.data:
-                    curr_val = res.data[0].get("is_hidden")
-                    is_hidden_currently = str(curr_val).lower() in ["true", "1", "t", "yes"]
-                    new_status = not is_hidden_currently
-                    
-                    update_res = supabase.table("shops").update({"is_hidden": new_status}).eq("product_id", product_id).eq("shop_name", session["shop_name"]).execute()
-                    if update_res.data and "is_hidden" not in update_res.data[0]:
-                        raise Exception("Supabase डेटाबेस में 'is_hidden' कॉलम नहीं मिला! कृपया SQL Editor में जाकर ALTER TABLE वाली कमांड रन करें।")
-                        
-                success_msg = "<span class='lang-text' data-hi='प्रोडक्ट सफलतापूर्वक छिपा/दिखा दिया गया है!' data-en='Product visibility toggled successfully!'>प्रोडक्ट सफलतापूर्वक छिपा/दिखा दिया गया है!</span>"
-                active_admin_tab = "manage_products_tab"
-            except Exception as e:
-                return render_template("index.html", error=f"<span class='lang-text' data-hi='एरर: {str(e)}' data-en='Error: {str(e)}'>एरर: {str(e)}</span>", active_admin_tab="manage_products_tab")
-                
         elif action == "update_order":
             order_id = request.form.get("order_id")
             new_status = request.form.get("status")
@@ -236,6 +221,7 @@ def index():
         elif action == "edit_profile":
             new_owner_name = request.form.get("owner_name")
             new_mobile = request.form.get("mobile_number")
+            new_main_category = request.form.get("main_category")
             new_category = request.form.get("category")
             new_password = request.form.get("password")
             profile_pic = request.files.get("profile_pic")
@@ -249,6 +235,7 @@ def index():
                 update_data = {
                     "owner_name": new_owner_name,
                     "mobile_number": new_mobile,
+                    "main_category": new_main_category,
                     "category": new_category
                 }
                 
@@ -294,6 +281,7 @@ def index():
                 supabase.table("shop_owners").update(update_data).eq("shop_name", session["shop_name"]).execute()
                 
                 session["owner_name"] = new_owner_name
+                session["main_category"] = new_main_category
                 session["category"] = new_category
                 success_msg = "<span class='lang-text' data-hi='प्रोफाइल सफलतापूर्वक अपडेट हो गई!' data-en='Profile updated successfully!'>प्रोफाइल सफलतापूर्वक अपडेट हो गई!</span>"
                 active_admin_tab = "profile_tab"
@@ -358,10 +346,7 @@ def view_shop(shop_name):
 
     # Supabase से इस दुकान के प्रोडक्ट्स लाएं
     response = supabase.table("shops").select("*").eq("shop_name", shop_name).execute()
-    products = []
-    for p in response.data:
-        if str(p.get("is_hidden")).lower() not in ["true", "1", "t", "yes"]:
-            products.append(p)
+    products = response.data
     
     # प्रोडक्ट्स की यूनीक केटेगरी निकालें
     product_categories = sorted(list(set([p.get("product_category") or "General" for p in products])))
