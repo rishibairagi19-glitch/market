@@ -117,7 +117,27 @@
         body.dark-mode .card-title, body.dark-mode h2, body.dark-mode h3, body.dark-mode .stat-value, body.dark-mode .order-cust, body.dark-mode .order-id { color: #f8fafc; }
         body.dark-mode .stat-box { background: #0f172a; border-left-color: #3b82f6; }
         body.dark-mode .card-details, body.dark-mode .stat-id, body.dark-mode .order-items { background: #0f172a; border-color: #334155; color: #cbd5e0; }
-        
+
+          /* Bottom Navigation Bar CSS */
+        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: #ffffff; box-shadow: 0 -4px 20px rgba(0,0,0,0.08); display: flex; justify-content: space-around; padding: 12px 0 8px 0; z-index: 1000; border-top: 1px solid #edf2f7; border-radius: 20px 20px 0 0; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; color: #a0aec0; text-decoration: none; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.3s; flex: 1; -webkit-tap-highlight-color: transparent; }
+        .nav-icon { font-size: 24px; margin-bottom: 4px; transition: all 0.3s; filter: grayscale(100%); opacity: 0.6; }
+        .nav-item:hover { color: #3b82f6; }
+        .nav-item.active { color: #3b82f6; }
+        .nav-item.active .nav-icon { transform: translateY(-4px) scale(1.15); filter: grayscale(0%); opacity: 1; }
+        body.dark-mode .bottom-nav { background: #1e293b; border-color: #334155; box-shadow: 0 -4px 20px rgba(0,0,0,0.4); }
+        body.dark-mode .nav-item { color: #64748b; }
+        body.dark-mode .nav-item.active { color: #38bdf8; }
+
+        /* Settings Card CSS */
+        .settings-card { background: #ffffff; border-radius: 20px; padding: 20px; margin-top: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.04); border: 1px solid #edf2f7; text-align: left; }
+        .settings-item { display: flex; align-items: center; justify-content: space-between; padding: 15px 0; border-bottom: 1px solid #edf2f7; cursor: pointer; text-decoration: none; color: #4a5568; font-weight: 700; font-size: 15px; transition: 0.2s; }
+        .settings-item:last-child { border-bottom: none; }
+        .settings-item:hover { color: #3b82f6; transform: translateX(5px); }
+        body.dark-mode .settings-card { background: #1e293b; border-color: #334155; }
+        body.dark-mode .settings-item { border-color: #334155; color: #cbd5e0; }
+        body.dark-mode .settings-item:hover { color: #38bdf8; }
+
         /* Category Filters CSS */
         .cat-btn { padding: 8px 18px; border-radius: 20px; border: 1px solid #cbd5e0; background: white; color: #4a5568; cursor: pointer; white-space: nowrap; font-weight: bold; transition: all 0.3s; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .cat-btn:hover { background: #edf2f7; }
