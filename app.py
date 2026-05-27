@@ -36,7 +36,7 @@ def logout():
 @app.route("/", methods=["GET", "POST"])
 def index():
     success_msg = None
-    active_admin_tab = "add_product_tab"
+    active_admin_tab = "home_tab"
     active_tab = "login"
 
     if request.method == "POST":
