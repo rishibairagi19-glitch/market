@@ -586,33 +586,6 @@
                 window.open(waLink, '_blank'); // Error hone par bhi whatsapp khol dein
             });
         }
-
-        // बाहर क्लिक करने पर पॉप-अप बंद हो जाएगा
-        window.onclick = function(event) {
-            const modal = document.getElementById('productModal');
-            const cartModal = document.getElementById('cartModal');
-            const helpModal = document.getElementById('helpModal');
-            if (event.target == modal) {
-                modal.style.display = "none";
-            }
-            if (event.target == cartModal) {
-                cartModal.style.display = "none";
-            }
-            if (event.target == helpModal) {
-                helpModal.style.display = "none";
-            }
-            
-            // Dropdown close logic
-            if (!event.target.matches('.profile-btn')) {
-                var dropdowns = document.getElementsByClassName("dropdown-content");
-                for (var i = 0; i < dropdowns.length; i++) {
-                    var openDropdown = dropdowns[i];
-                    if (openDropdown.classList.contains('show-dropdown')) {
-                        openDropdown.classList.remove('show-dropdown');
-                    }
-                }
-            }
-        }
         
         // Category Filters logic
         let activeCategory = 'All';
@@ -677,7 +650,7 @@
             <a onclick="toggleDarkMode()" id="darkModeBtn">🌙 डार्क मोड / Dark Mode</a>
             <a onclick="toggleLanguage()" id="langBtn">🌐 English / हिन्दी</a>
             <hr style="margin: 5px 0; border: 0; border-top: 1px solid #334155;">
-            <a href="/logout" style="color: #e74c3c;" class="lang-text" data-hi="🚪 लॉगआउट करें" data-en="🚪 Logout">🚪 लॉगआउट करें</a>
+            <a href="/logout" onclick="document.getElementById('global-loader').style.display='flex';" style="color: #e74c3c;" class="lang-text" data-hi="🚪 लॉगआउट करें" data-en="🚪 Logout">🚪 लॉगआउट करें</a>
         </div>
     </div>
 
@@ -1042,7 +1015,19 @@
         function openEditProfileModal(name, mobile, category) {
             document.getElementById('edit_profile_name').value = name;
             document.getElementById('edit_profile_mobile').value = mobile;
-            document.getElementById('edit_profile_category').value = category;
+            
+            // Find Main Category and Update Sub Categories
+            let foundMainCat = "";
+            if(typeof shopCategories !== 'undefined') {
+                for(const field in shopCategories) {
+                    if(shopCategories[field].some(c => c.val === category)) { foundMainCat = field; break; }
+                }
+            }
+            
+            const mainCatDropdown = document.getElementById('edit_main_cat');
+            if(foundMainCat && mainCatDropdown) mainCatDropdown.value = foundMainCat;
+            updateSubCats('edit_main_cat', 'edit_profile_category', category);
+            
             document.getElementById('editProfileModal').style.display = 'block';
         }
         function closeEditProfileModal() {
@@ -1114,7 +1099,7 @@
     {% else %}
     
         <!-- लॉगिन फॉर्म (Login) -->
-        <div id="login-section" class="{% if active_tab == 'signup' %}hidden{% endif %}">
+        <div id="login-section" style="{% if active_tab == 'signup' %}display: none;{% else %}display: block;{% endif %}">
             <h2 class="lang-text" data-hi="अपनी दुकान में लॉगिन करें" data-en="Login to your shop">अपनी दुकान में लॉगिन करें</h2>
             <form method="POST">
                 <input type="hidden" name="action" value="login">
@@ -1129,12 +1114,12 @@
                 <button type="submit" class="lang-text" data-hi="लॉगिन करें" data-en="Login">लॉगिन करें</button>
             </form>
             <div class="toggle-link">
-                <span class="lang-text" data-hi="अकाउंट नहीं है?" data-en="Don't have an account?">अकाउंट नहीं है?</span> <span onclick="toggleForms()" class="lang-text" data-hi="नया अकाउंट बनाएं (Sign Up)" data-en="Create a new account (Sign Up)" style="text-decoration: underline; cursor: pointer;">नया अकाउंट बनाएं (Sign Up)</span>
+                <span class="lang-text" data-hi="अकाउंट नहीं है?" data-en="Don't have an account?">अकाउंट नहीं है?</span> <span onclick="showSignup()" class="lang-text" data-hi="नया अकाउंट बनाएं (Sign Up)" data-en="Create a new account (Sign Up)" style="text-decoration: underline; cursor: pointer;">नया अकाउंट बनाएं (Sign Up)</span>
             </div>
         </div>
 
         <!-- साइन-अप फॉर्म (Sign Up) -->
-        <div id="signup-section" class="{% if active_tab != 'signup' %}hidden{% endif %}">
+        <div id="signup-section" style="{% if active_tab == 'signup' %}display: block;{% else %}display: none;{% endif %}">
             <h2 class="lang-text" data-hi="नया अकाउंट बनाएं (Sign Up)" data-en="Create a new account (Sign Up)">नया अकाउंट बनाएं (Sign Up)</h2>
             <form method="POST">
                 <input type="hidden" name="action" value="signup">
@@ -1167,14 +1152,18 @@
                 <button type="submit" class="lang-text" data-hi="साइन-अप करें" data-en="Sign Up">साइन-अप करें</button>
             </form>
             <div class="toggle-link">
-                <span class="lang-text" data-hi="पहले से अकाउंट है?" data-en="Already have an account?">पहले से अकाउंट है?</span> <span onclick="toggleForms()" class="lang-text" data-hi="लॉगिन करें" data-en="Login" style="text-decoration: underline; cursor: pointer;">लॉगिन करें</span>
+                <span class="lang-text" data-hi="पहले से अकाउंट है?" data-en="Already have an account?">पहले से अकाउंट है?</span> <span onclick="showLogin()" class="lang-text" data-hi="लॉगिन करें" data-en="Login" style="text-decoration: underline; cursor: pointer;">लॉगिन करें</span>
             </div>
         </div>
 
         <script>
-            function toggleForms() {
-                document.getElementById('login-section').classList.toggle('hidden');
-                document.getElementById('signup-section').classList.toggle('hidden');
+            function showLogin() {
+                document.getElementById('login-section').style.display = 'block';
+                document.getElementById('signup-section').style.display = 'none';
+            }
+            function showSignup() {
+                document.getElementById('login-section').style.display = 'none';
+                document.getElementById('signup-section').style.display = 'block';
             }
         </script>
     {% endif %}
@@ -1381,6 +1370,31 @@
             const msg = encodeURIComponent(currentLang === 'hi' ? "नमस्ते! मुझे इस ऐप को इस्तेमाल करने में मदद चाहिए।" : "Hello! I need some help using the app.");
             window.open(`https://wa.me/${adminNumber}?text=${msg}`, '_blank');
         }
+        
+        // बाहर क्लिक करने पर पॉप-अप और ड्रॉपडाउन बंद करने के लिए
+        window.addEventListener('click', function(event) {
+            const helpModal = document.getElementById('helpModal');
+            const productModal = document.getElementById('productModal');
+            const cartModal = document.getElementById('cartModal');
+            
+            if (event.target == helpModal) {
+                helpModal.style.display = "none";
+            }
+            if (productModal && event.target == productModal) {
+                productModal.style.display = "none";
+            }
+            if (cartModal && event.target == cartModal) {
+                cartModal.style.display = "none";
+            }
+            if (!event.target.matches('.profile-btn')) {
+                let dropdowns = document.getElementsByClassName("dropdown-content");
+                for (let i = 0; i < dropdowns.length; i++) {
+                    if (dropdowns[i].classList.contains('show-dropdown')) {
+                        dropdowns[i].classList.remove('show-dropdown');
+                    }
+                }
+            }
+        });
     </script>
 </body>
 </html>
