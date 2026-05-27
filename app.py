@@ -130,11 +130,11 @@ def index():
                     img = Image.open(image)
                     if img.mode in ("RGBA", "P"):
                         img = img.convert("RGB")
-                    img.thumbnail((800, 800))  # अधिकतम साइज 800x800 पिक्सल
+                    img.thumbnail((600, 600))  # अधिकतम साइज 600x600 (फास्ट अपलोड के लिए)
                     
                     # इमेज को मेमोरी (BytesIO) में सेव करें
                     img_byte_arr = io.BytesIO()
-                    img.save(img_byte_arr, format='JPEG', optimize=True, quality=60)
+                    img.save(img_byte_arr, format='JPEG', optimize=True, quality=50)
                     img_bytes = img_byte_arr.getvalue()
                     
                     try:
