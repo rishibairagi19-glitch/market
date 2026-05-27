@@ -1,0 +1,1238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% if is_shop_view %}
+    <title>{{ shop_name }} की दुकान</title>
+    {% else %}
+    <title>शॉप इन्वेंटरी</title>
+    {% endif %}
+    
+    <!-- Cropper.js for Profile Image Cropping -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+    <style>
+        /* Custom Cropper Theme for Circular Profile Pic */
+        .cropper-view-box, .cropper-face {
+            border-radius: 50%; /* गोल आकार (Circle) */
+        }
+        .cropper-view-box {
+            outline: 3px solid #3498db !important;
+            box-shadow: 0 0 0 2px rgba(255,255,255,0.5);
+        }
+        .cropper-point {
+            background-color: #3498db !important;
+            width: 12px !important;
+            height: 12px !important;
+            border-radius: 50%;
+        }
+        .cropper-line {
+            display: none !important; /* साफ-सुथरा लुक देने के लिए बीच की लाइनें हटा दीं */
+        }
+        .cropper-modal {
+            background-color: rgba(0,0,0,0.8) !important; /* बैकग्राउंड को डार्क करें */
+        }
+
+        /* Premium Loading Spinner CSS */
+        #global-loader { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(10px); z-index: 9999; flex-direction: column; justify-content: center; align-items: center; }
+        .loader-content { background: rgba(255, 255, 255, 0.1); padding: 40px 50px; border-radius: 24px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); text-align: center; border: 1px solid rgba(255,255,255,0.15); backdrop-filter: blur(20px); }
+        .spinner { border: 4px solid rgba(255, 255, 255, 0.1); border-top: 4px solid #3b82f6; border-right: 4px solid #8b5cf6; border-radius: 50%; width: 60px; height: 60px; animation: spin 1s cubic-bezier(0.55, 0.15, 0.45, 0.85) infinite; margin: 0 auto 20px auto; }
+        .loader-text { font-size: 22px; font-weight: 800; color: #ffffff; letter-spacing: 1px; text-shadow: 0 2px 10px rgba(0,0,0,0.2); margin-bottom: 5px; }
+        .loader-subtext { font-size: 14px; color: #94a3b8; font-weight: 500; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Modern Profile Card CSS */
+        .profile-card { background: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.08); border: none; margin-bottom: 25px; transition: transform 0.3s ease; }
+        .profile-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); height: 120px; position: relative; }
+        .profile-avatar { width: 110px; height: 110px; background: #fff; border-radius: 50%; position: absolute; bottom: -55px; left: 50%; transform: translateX(-50%); border: 5px solid #fff; box-shadow: 0 8px 20px rgba(0,0,0,0.15); display: flex; align-items: center; justify-content: center; font-size: 50px; overflow: hidden; z-index: 10; }
+        .profile-body { padding: 70px 30px 30px; text-align: center; }
+        .profile-name { font-size: 26px; color: #2d3748; margin: 0 0 5px 0; font-weight: 800; letter-spacing: -0.5px; }
+        .profile-id { color: #718096; font-size: 14px; background: #edf2f7; padding: 5px 15px; border-radius: 20px; display: inline-block; font-weight: 600; margin-bottom: 25px; }
+        .profile-stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; text-align: left; }
+        .stat-box { background: #f8fafc; padding: 15px 20px; border-radius: 15px; border-left: 4px solid #667eea; transition: all 0.3s ease; }
+        .stat-box:hover { transform: translateY(-3px); box-shadow: 0 8px 15px rgba(0,0,0,0.05); background: #fff; }
+        .stat-label { font-size: 12px; color: #a0aec0; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; margin-bottom: 5px; }
+        .stat-value { font-size: 16px; color: #2d3748; font-weight: 800; }
+        .stat-box.full-width { grid-column: 1 / -1; }
+        .stat-badge { background: #e6fffa; color: #38a169; padding: 5px 12px; border-radius: 20px; font-size: 13px; font-weight: bold; border: 1px solid #c6f6d5; display: inline-block; }
+        .profile-edit-btn { background: linear-gradient(135deg, #f6d365 0%, #fda085 100%); color: #fff; border: none; padding: 12px 25px; border-radius: 30px; font-weight: bold; font-size: 15px; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(253, 160, 133, 0.4); display: inline-block; margin-top: 25px; width: auto; }
+        .profile-edit-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(253, 160, 133, 0.6); background: linear-gradient(135deg, #fda085 0%, #f6d365 100%); }
+
+        /* Modern Profile Edit Modal CSS */
+        .edit-profile-modal .modal-content { border-radius: 24px; background: #ffffff; padding: 35px; border: none; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); }
+        .edit-profile-modal h2 { color: #1a202c; font-size: 24px; font-weight: 800; border-bottom: 2px solid #edf2f7; padding-bottom: 15px; margin-bottom: 25px; text-align: left; }
+        .edit-profile-form label { color: #4a5568; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+        .edit-profile-form input, .edit-profile-form select { background: #f7fafc; border: 2px solid #edf2f7; border-radius: 12px; padding: 12px 15px; font-size: 15px; color: #2d3748; transition: all 0.3s ease; font-weight: 500; }
+        .edit-profile-form input:focus, .edit-profile-form select:focus { background: #ffffff; border-color: #667eea; outline: none; box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.15); }
+        .edit-profile-form .form-group { margin-bottom: 20px; text-align: left; }
+        .save-profile-btn { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 14px; border-radius: 12px; font-size: 16px; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4); color: white; border: none; font-weight: bold; cursor: pointer; transition: all 0.3s; }
+        .save-profile-btn:hover { background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%); transform: translateY(-2px); box-shadow: 0 8px 20px rgba(102, 126, 234, 0.6); }
+        .cancel-profile-btn { background: #edf2f7; color: #4a5568; padding: 14px; border-radius: 12px; font-size: 16px; font-weight: bold; border: none; cursor: pointer; transition: all 0.3s; }
+        .cancel-profile-btn:hover { background: #e2e8f0; color: #2d3748; }
+
+        /* Add Product & Manage Products Modern CSS */
+        .add-product-card { background: #ffffff; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.06); padding: 30px; margin-bottom: 20px; border: 1px solid #edf2f7; }
+        .add-product-card h3 { color: #1a202c; font-size: 22px; font-weight: 800; border-bottom: 2px solid #edf2f7; padding-bottom: 15px; margin-top: 0; margin-bottom: 20px; text-align: left; }
+        .submit-product-btn { background: linear-gradient(135deg, #48bb78 0%, #38a169 100%); padding: 14px; border-radius: 12px; font-size: 16px; box-shadow: 0 4px 15px rgba(72, 187, 120, 0.4); color: white; border: none; font-weight: bold; cursor: pointer; transition: all 0.3s; width: 100%; margin-top: 10px; }
+        .submit-product-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(72, 187, 120, 0.6); }
+        
+        .manage-products-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #edf2f7; padding-bottom: 15px; margin-bottom: 20px; }
+        .manage-products-header h3 { color: #1a202c; font-size: 20px; font-weight: 800; margin: 0; }
+        .product-count-badge { background: #ebf4ff; color: #3182ce; padding: 5px 12px; border-radius: 20px; font-size: 14px; font-weight: bold; border: 1px solid #bee3f8; }
+        
+        .manage-product-card { background: #fff; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.04); padding: 15px; margin-bottom: 15px; display: flex; align-items: center; gap: 15px; border: 1px solid #edf2f7; transition: all 0.3s ease; }
+        .manage-product-card:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(0,0,0,0.1); border-color: #e2e8f0; }
+        .manage-product-img { width: 90px; height: 90px; border-radius: 12px; object-fit: cover; box-shadow: 0 4px 10px rgba(0,0,0,0.1); flex-shrink: 0; }
+        .manage-product-info { flex: 1; text-align: left; overflow: hidden; }
+        .manage-product-title { font-size: 17px; font-weight: 800; color: #2d3748; margin-bottom: 5px; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .manage-product-price { color: #38a169; font-weight: 800; font-size: 16px; }
+        .manage-product-stock { font-size: 12px; color: #718096; background: #edf2f7; padding: 3px 8px; border-radius: 8px; font-weight: bold; margin-left: 5px; }
+        .manage-product-id { font-size: 11px; background: #fee2e2; color: #e53e3e; padding: 3px 8px; border-radius: 6px; font-weight: bold; margin-bottom: 8px; display: inline-block; letter-spacing: 0.5px; border: 1px solid #fecaca; }
+        .manage-product-actions { display: flex; gap: 10px; margin-top: 12px; }
+        .btn-modern-edit { background: #fbd38d; color: #c05621; border: none; padding: 8px; border-radius: 8px; font-size: 13px; font-weight: bold; cursor: pointer; transition: all 0.2s; width: auto; margin: 0; box-shadow: 0 2px 5px rgba(251, 211, 141, 0.4); flex: 1; display: flex; align-items: center; justify-content: center; gap: 5px; }
+        .btn-modern-edit:hover { background: #f6ad55; color: #fff; transform: translateY(-1px); }
+        .btn-modern-delete { background: #feb2b2; color: #c53030; border: none; padding: 8px; border-radius: 8px; font-size: 13px; font-weight: bold; cursor: pointer; transition: all 0.2s; width: auto; margin: 0; box-shadow: 0 2px 5px rgba(254, 178, 178, 0.4); flex: 1; display: flex; align-items: center; justify-content: center; gap: 5px; }
+        .btn-modern-delete:hover { background: #fc8181; color: #fff; transform: translateY(-1px); }
+        
+        .btn-modern-hide { background: #e2e8f0; color: #4a5568; border: none; padding: 8px; border-radius: 8px; font-size: 13px; font-weight: bold; cursor: pointer; transition: all 0.2s; width: auto; margin: 0; box-shadow: 0 2px 5px rgba(226, 232, 240, 0.6); flex: 1; display: flex; align-items: center; justify-content: center; gap: 5px; }
+        .btn-modern-hide:hover { background: #cbd5e0; color: #2d3748; transform: translateY(-1px); }
+        .hidden-product { opacity: 0.6; filter: grayscale(30%); }
+
+        /* Orders Tab CSS */
+        .order-card { background: #fff; border-radius: 16px; padding: 20px; margin-bottom: 15px; border: 1px solid #edf2f7; box-shadow: 0 4px 15px rgba(0,0,0,0.04); }
+        .order-header { display: flex; justify-content: space-between; margin-bottom: 10px; border-bottom: 1px dashed #e2e8f0; padding-bottom: 10px; }
+        .order-id { font-weight: bold; color: #4a5568; }
+        .order-cust { font-size: 16px; font-weight: bold; color: #2d3748; margin-bottom: 5px; }
+        .order-items { background: #f7fafc; padding: 10px; border-radius: 8px; font-size: 13px; color: #4a5568; margin-bottom: 15px; }
+        .order-total { font-weight: bold; color: #38a169; font-size: 16px; margin-bottom: 15px; }
+        .status-badge { padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: bold; }
+        .status-Pending { background: #fefcbf; color: #b7791f; }
+        .status-Delivered { background: #c6f6d5; color: #2f855a; }
+        .status-Cancelled { background: #fed7d7; color: #c53030; }
+        
+        /* Dark Mode Settings CSS */
+        body.dark-mode { background: #0f172a; color: #f8fafc; }
+        body.dark-mode .container, body.dark-mode .card, body.dark-mode .add-product-card, body.dark-mode .manage-product-card, body.dark-mode .profile-card, body.dark-mode .order-card { background: #1e293b; border-color: #334155; }
+        body.dark-mode .modal-content, body.dark-mode .dropdown-content { background: #1e293b; border-color: #334155; color: #f8fafc; }
+        body.dark-mode .dropdown-content a { color: #f8fafc; border-bottom-color: #334155; }
+        body.dark-mode .dropdown-content a:hover { background: #334155; color: #38bdf8; }
+        body.dark-mode input, body.dark-mode select { background: #0f172a; color: #f8fafc; border-color: #334155; }
+        body.dark-mode .card-title, body.dark-mode h2, body.dark-mode h3, body.dark-mode .stat-value, body.dark-mode .order-cust, body.dark-mode .order-id { color: #f8fafc; }
+        body.dark-mode .stat-box { background: #0f172a; border-left-color: #3b82f6; }
+        body.dark-mode .card-details, body.dark-mode .stat-id, body.dark-mode .order-items { background: #0f172a; border-color: #334155; color: #cbd5e0; }
+        
+        /* Category Filters CSS */
+        .cat-btn { padding: 8px 18px; border-radius: 20px; border: 1px solid #cbd5e0; background: white; color: #4a5568; cursor: pointer; white-space: nowrap; font-weight: bold; transition: all 0.3s; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .cat-btn:hover { background: #edf2f7; }
+        .cat-btn.active-cat { background: #3b82f6; color: white; border-color: #3b82f6; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.4); }
+        body.dark-mode .cat-btn { background: #1e293b; border-color: #334155; color: #cbd5e0; }
+        body.dark-mode .cat-btn.active-cat { background: #3b82f6; color: white; border-color: #3b82f6; }
+
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f7f6; margin: 0; padding: 20px; color: #333; }
+        .container { max-width: 500px; margin: 40px auto; background: #fff; padding: 30px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        h2 { text-align: center; color: #2c3e50; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 14px; }
+        input[type="text"], input[type="number"], input[type="password"], input[type="file"], select { 
+            width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 14px;
+        }
+        button { width: 100%; padding: 12px; background: #27ae60; color: #fff; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold; transition: 0.3s; margin-top: 10px; }
+        button:hover { background: #219150; }
+        .toggle-link { text-align: center; margin-top: 20px; font-size: 14px; }
+        .toggle-link span { color: #3498db; cursor: pointer; font-weight: bold; text-decoration: underline; }
+        .hidden { display: none; }
+        
+        .alert { padding: 15px; margin-bottom: 20px; border-radius: 5px; text-align: center; font-size: 14px; font-weight: bold; }
+        .alert-error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .alert-success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+
+        /* Customer View Premium UI */
+        .customer-top-bar { background: #1e293b; padding: 12px 25px; display: flex; justify-content: space-between; align-items: center; color: white; position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin: -20px -20px 0 -20px; }
+        .customer-top-bar a { color: white; text-decoration: none; font-weight: bold; font-size: 14px; background: rgba(255,255,255,0.15); padding: 8px 16px; border-radius: 20px; transition: 0.3s; border: 1px solid rgba(255,255,255,0.1); }
+        .customer-top-bar a:hover { background: rgba(255,255,255,0.25); transform: translateY(-1px); }
+        .shop-hero { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 50px 20px; text-align: center; color: white; margin: 0 -20px 40px -20px; border-radius: 0 0 30px 30px; box-shadow: 0 10px 30px rgba(118, 75, 162, 0.2); }
+        .shop-hero h1 { margin: 0; font-size: 2.8em; font-weight: 900; letter-spacing: -1px; text-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        .shop-hero p { margin: 15px 0 0; font-size: 1.1em; opacity: 0.9; font-weight: 500; }
+
+        .grid-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; max-width: 1100px; margin: 0 auto; }
+        .card { background: #ffffff; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid #edf2f7; overflow: hidden; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; text-align: left; display: flex; flex-direction: column; }
+        .card:hover { transform: translateY(-8px); box-shadow: 0 20px 40px rgba(0,0,0,0.12); border-color: #cbd5e0; }
+        .card img { width: 100%; height: 240px; object-fit: cover; border-bottom: 1px solid #edf2f7; transition: transform 0.5s; }
+        .card:hover img { transform: scale(1.03); }
+        .card-content { padding: 20px; display: flex; flex-direction: column; flex-grow: 1; }
+        .card-title { font-size: 1.2em; font-weight: 800; margin-bottom: 8px; color: #2d3748; }
+        .card-price { color: #38a169; font-size: 1.5em; font-weight: 900; margin-bottom: 15px; }
+        .card-details { color: #4a5568; font-size: 0.85em; background: #f7fafc; padding: 12px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 15px; flex-grow: 1; }
+        .empty-msg { text-align: center; color: #777; font-size: 1.2em; grid-column: 1 / -1; padding: 50px; background: white; border-radius: 10px;}
+        
+        /* Modern Modal Gallery CSS */
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(15,23,42,0.75); backdrop-filter: blur(5px); }
+        .modal-content { background-color: #fff; margin: 5% auto; padding: 30px; border-radius: 24px; width: 90%; max-width: 500px; position: relative; animation: slideDown 0.3s; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); border: none; }
+        @keyframes slideDown { from { transform: translateY(-50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .close-btn { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; margin-top: -10px; }
+        .close-btn:hover, .close-btn:focus { color: #000; text-decoration: none; }
+        
+        .modal-gallery { margin-bottom: 25px; }
+        #mainModalImage { width: 100%; height: 320px; object-fit: cover; border-radius: 16px; box-shadow: 0 8px 25px rgba(0,0,0,0.1); transition: opacity 0.2s ease-in-out; background: #f7fafc; }
+        .thumbnail-strip { display: flex; gap: 12px; overflow-x: auto; margin-top: 15px; padding: 5px; scroll-behavior: smooth; }
+        .thumbnail-strip::-webkit-scrollbar { height: 6px; }
+        .thumbnail-strip::-webkit-scrollbar-thumb { background: #cbd5e0; border-radius: 10px; }
+        .thumbnail-strip img { width: 75px; height: 75px; object-fit: cover; border-radius: 12px; cursor: pointer; opacity: 0.5; border: 2px solid transparent; transition: all 0.3s; flex-shrink: 0; background: #fff; }
+        .thumbnail-strip img.active, .thumbnail-strip img:hover { opacity: 1; border-color: #667eea; transform: scale(1.05); box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3); }
+        
+        .whatsapp-btn { background: #25D366; color: white; text-align: center; padding: 12px; border-radius: 12px; text-decoration: none; font-size: 16px; font-weight: bold; box-shadow: 0 4px 15px rgba(37, 211, 102, 0.3); transition: 0.3s; }
+        .whatsapp-btn:hover { background: #1ebd5c; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(37, 211, 102, 0.4); }
+        
+        .add-to-cart-btn { background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%); color: white; text-align: center; padding: 12px; border-radius: 12px; font-size: 16px; font-weight: bold; border: none; cursor: pointer; margin-top: 10px; width: 100%; box-shadow: 0 4px 15px rgba(221, 107, 32, 0.3); transition: all 0.3s; }
+        .add-to-cart-btn:hover { background: linear-gradient(135deg, #dd6b20 0%, #c05621 100%); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(221, 107, 32, 0.4); }
+        
+        /* Profile Dropdown Menu CSS */
+        .profile-menu { position: absolute; top: 20px; right: 20px; display: inline-block; }
+        .profile-btn { background: #ecf0f1; color: #2c3e50; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-weight: bold; border: 1px solid #bdc3c7; font-size: 14px; margin-top: 0; width: auto; }
+        .profile-btn:hover { background: #e0e6ed; }
+        .dropdown-content { display: none; position: absolute; right: 0; top: 100%; background-color: #fff; min-width: 180px; box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2); z-index: 100; border-radius: 5px; overflow: hidden; border: 1px solid #eee; margin-top: 5px; }
+        .dropdown-content a { color: #333; padding: 12px 16px; text-decoration: none; display: block; border-bottom: 1px solid #eee; font-size: 14px; cursor: pointer; text-align: left; }
+        .dropdown-content a:hover { background-color: #f9f9f9; color: #27ae60; }
+        .show-dropdown { display: block !important; }
+    </style>
+</head>
+<body>
+    <!-- Global Loading Spinner -->
+    <div id="global-loader">
+        <div class="loader-content">
+            <div class="spinner"></div>
+            <div class="loader-text lang-text" data-hi="कृपया प्रतीक्षा करें..." data-en="Please Wait...">कृपया प्रतीक्षा करें...</div>
+            <div class="loader-subtext lang-text" data-hi="(लोडिंग / प्रोसेसिंग)" data-en="(Loading / Processing)">(Loading / Processing)</div>
+        </div>
+    </div>
+
+    {% if is_shop_view %}
+    <!-- पब्लिक शॉप व्यू (Customer View) -->
+    <div class="customer-top-bar">
+        <div style="font-weight: 800; font-size: 16px;" class="lang-text" data-hi="🛒 शॉप व्यू" data-en="🛒 Shop View">🛒 शॉप व्यू</div>
+        <div style="display: flex; gap: 10px;">
+            <button onclick="shareShop()" style="background: rgba(255,255,255,0.2); border: none; color: white; border-radius: 20px; padding: 8px 15px; font-weight: bold; cursor: pointer; font-size: 13px; transition: 0.3s;"><span style="margin-right: 5px;">📤</span> <span class="lang-text" data-hi="शेयर" data-en="Share">शेयर</span></button>
+            <a href="/">
+                {% if session.get('shop_name') == shop_name %}
+                    <span class="lang-text" data-hi="🔙 वापस" data-en="🔙 Back">🔙 वापस</span>
+                {% else %}
+                    <span class="lang-text" data-hi="🏠 बनाएं" data-en="🏠 Create">🏠 बनाएं</span>
+                {% endif %}
+            </a>
+        </div>
+    </div>
+    <div class="shop-hero">
+        <h1>🛍️ {{ shop_name }}</h1>
+        <p class="lang-text" data-hi="हमारे बेहतरीन प्रोडक्ट्स की लिस्ट नीचे देखें" data-en="Check out our best products below">हमारे बेहतरीन प्रोडक्ट्स की लिस्ट नीचे देखें</p>
+        <div style="max-width: 600px; margin: 25px auto 0; position: relative;">
+            <input type="text" id="searchInput" onkeyup="applyFilters()" data-hi-placeholder="🔍 प्रोडक्ट का नाम सर्च करें..." data-en-placeholder="🔍 Search for a product..." placeholder="🔍 प्रोडक्ट का नाम सर्च करें..." style="width: 100%; padding: 15px 20px; border-radius: 25px; border: none; box-shadow: 0 8px 20px rgba(0,0,0,0.15); font-size: 16px; outline: none;">
+        </div>
+    </div>
+    
+    <div class="category-filters" style="display: flex; gap: 10px; overflow-x: auto; padding: 10px 0; margin-bottom: 20px; max-width: 1100px; margin-left: auto; margin-right: auto;">
+        <button class="cat-btn active-cat lang-text all-cat-btn" data-hi="सभी (All)" data-en="All Products" onclick="filterCategory('All')">सभी (All)</button>
+        {% for cat in product_categories %}
+        <button class="cat-btn" onclick="filterCategory('{{ cat|e }}')">{{ cat }}</button>
+        {% endfor %}
+    </div>
+
+    <div class="grid-container">
+        {% if products %}
+            {% for p in products %}
+            {% set images = p.image_url.split(',') if p.image_url else [] %}
+            <div class="card" 
+                 data-title="{{ p.product|e }}" 
+                 data-price="{{ p.price }}" 
+                 data-size="{{ (p.size or '')|e }}" 
+                 data-quantity="{{ p.quantity }}" 
+                 data-category="{{ (p.product_category or 'General')|e }}" 
+                 data-product-id="{{ p.product_id }}" 
+                 data-images="{{ p.image_url.replace('\\', '/') if p.image_url else '' }}" 
+                 onclick="openProductModal(this)">
+                 
+                {% if images %}
+                {% set first_img = images[0].replace('\\', '/') %}
+                <img src="{% if first_img.startswith('http') %}{{ first_img }}{% else %}/{{ first_img }}{% endif %}" alt="{{ p.product }}" loading="lazy">
+                {% endif %}
+                <div class="card-content">
+                    <div class="card-title"><span style="font-size: 12px; color: #aaa; float: right;">#{{ p.product_id }}</span>{{ p.product }}</div>
+                    <div class="card-price">₹{{ p.price }}</div>
+                    <div class="card-details" style="margin-bottom: 10px;">
+                        <div style="margin-bottom: 5px;">
+                            {% if shop_category == 'electronics' %}<span class="lang-text" data-hi="ब्रांड/वारंटी:" data-en="Brand/Warranty:">ब्रांड/वारंटी:</span>
+                            {% elif shop_category in ['clothing', 'footwear'] %}<span class="lang-text" data-hi="साइज:" data-en="Size:">साइज:</span>
+                            {% elif shop_category in ['grocery', 'pharmacy'] %}<span class="lang-text" data-hi="पैकेज/वजन:" data-en="Pack/Weight:">पैकेज/वजन:</span>
+                            {% elif shop_category == 'furniture' %}<span class="lang-text" data-hi="मटेरियल/रंग:" data-en="Material/Color:">मटेरियल/रंग:</span>
+                            {% else %}<span class="lang-text" data-hi="विवरण:" data-en="Details:">विवरण:</span>
+                            {% endif %} <b>{{ p.size }}</b> 
+                        </div>
+                        <div><span class="lang-text" data-hi="स्टॉक:" data-en="Stock:">स्टॉक:</span> 
+                            {% if p.quantity > 0 %}
+                                <span style="background: #e6fffa; color: #38a169; padding: 2px 8px; border-radius: 12px; font-size: 12px;"><b style="color:#2f855a;">{{ p.quantity }}</b> <span class="lang-text" data-hi="उपलब्ध" data-en="Available">उपलब्ध</span></span>
+                            {% else %}
+                                <span style="background: #fee2e2; color: #e53e3e; padding: 2px 8px; border-radius: 12px; font-size: 12px;"><b class="lang-text" data-hi="आउट ऑफ स्टॉक" data-en="Out of Stock">Out of Stock</b></span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% if p.quantity > 0 %}
+                        <button class="add-to-cart-btn lang-text" data-hi="🛒 कार्ट में डालें" data-en="🛒 Add to Cart" style="padding: 10px; font-size: 14px;" onclick="addToCart('{{ (p.product or '')|replace('\'', '\\\'')|e }}', '{{ p.price }}', '{{ (p.size or '')|replace('\'', '\\\'')|e }}', '{{ p.product_id }}', event)">🛒 कार्ट में डालें</button>
+                    {% else %}
+                        <button class="add-to-cart-btn lang-text" data-hi="🚫 आउट ऑफ स्टॉक" data-en="🚫 Out of Stock" style="padding: 10px; font-size: 14px; background: #e2e8f0; color: #a0aec0; cursor: not-allowed; box-shadow: none;" disabled>🚫 आउट ऑफ स्टॉक</button>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-msg lang-text" data-hi="अभी तक इस दुकान में कोई प्रोडक्ट नहीं जोड़ा गया है।" data-en="No products have been added to this shop yet.">अभी तक इस दुकान में कोई प्रोडक्ट नहीं जोड़ा गया है।</div>
+        {% endif %}
+    </div>
+
+    <!-- Product Detail Modal -->
+    <div id="productModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeProductModal()">&times;</span>
+            
+            <div class="modal-gallery">
+                <img id="mainModalImage" src="" alt="Product">
+                <div class="thumbnail-strip" id="modalThumbnails"></div>
+            </div>
+            
+            <div id="modalTitle" style="font-size: 24px; font-weight: 800; color: #1a202c; margin-bottom: 5px;"></div>
+            <div id="modalPrice" style="font-size: 28px; font-weight: 900; color: #38a169; margin-bottom: 20px;"></div>
+            
+            <div style="background: #f7fafc; border: 1px solid #edf2f7; border-radius: 16px; padding: 15px; margin-bottom: 25px;">
+                <div style="margin-bottom: 8px; color: #4a5568;"><b class="lang-text" data-hi="विवरण:" data-en="Details:">विवरण:</b> <span id="modalSize" style="color: #2d3748; font-weight: 600;"></span></div>
+                <div style="color: #4a5568;"><b class="lang-text" data-hi="स्टॉक:" data-en="Stock:">स्टॉक:</b> <span id="modalQuantity" style="background: #e6fffa; color: #38a169; padding: 3px 10px; border-radius: 20px; font-weight: bold; font-size: 13px;"></span></div>
+            </div>
+            
+            <div style="display: flex; gap: 12px;">
+                <button id="modalAddToCart" class="add-to-cart-btn lang-text" data-hi="🛒 कार्ट में डालें" data-en="🛒 Add to Cart" onclick="addCurrentToCart()" style="margin: 0; flex: 1; border-radius: 14px;">🛒 कार्ट में डालें</button>
+                <a href="#" id="modalWhatsapp" class="whatsapp-btn" target="_blank" style="margin: 0; flex: 1; display: flex; align-items: center; justify-content: center; border-radius: 14px;">💬 WhatsApp</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating Cart Button -->
+    <div id="floatingCart" style="display: none; position: fixed; bottom: 20px; right: 20px; background: #e67e22; color: white; padding: 15px 20px; border-radius: 50px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3); z-index: 999; font-weight: bold;" onclick="openCartModal()">
+        <span class="lang-text" data-hi="🛒 कार्ट" data-en="🛒 Cart">🛒 कार्ट</span> (<span id="cartCount">0</span>)
+    </div>
+
+    <!-- Cart Modal -->
+    <div id="cartModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeCartModal()">&times;</span>
+            <h2 style="margin-top: 0;" class="lang-text" data-hi="🛒 आपका कार्ट" data-en="🛒 Your Cart">🛒 आपका कार्ट</h2>
+            <div id="cartItems" style="margin-bottom: 20px; max-height: 300px; overflow-y: auto;">
+            </div>
+            <div style="font-size: 1.2em; font-weight: bold; text-align: right; margin-bottom: 15px;">
+                <span class="lang-text" data-hi="कुल (Total):" data-en="Total:">कुल (Total):</span> ₹<span id="cartTotal">0</span>
+            </div>
+            
+            <button id="showCheckoutBtn" class="add-to-cart-btn lang-text" data-hi="चेकआउट करें (Proceed to Checkout)" data-en="Proceed to Checkout" onclick="showCheckoutForm()" style="margin-top: 15px; width: 100%;">चेकआउट करें (Proceed to Checkout)</button>
+            <div id="checkoutForm" style="display:none; margin-top: 15px; border-top: 1px solid #eee; padding-top: 15px;">
+                <input type="text" id="custName" data-hi-placeholder="आपका नाम" data-en-placeholder="Your Name" placeholder="आपका नाम" style="margin-bottom:10px; width:100%; box-sizing: border-box;" required>
+                <input type="text" id="custMobile" data-hi-placeholder="आपका मोबाइल नंबर" data-en-placeholder="Your Mobile" placeholder="आपका मोबाइल नंबर" style="margin-bottom:10px; width:100%; box-sizing: border-box;" required>
+                <button onclick="submitAndCheckout(event)" class="whatsapp-btn lang-text" data-hi="💬 WhatsApp पर ऑर्डर भेजें" data-en="💬 Send Order on WhatsApp" style="width:100%; border: none;">💬 WhatsApp पर ऑर्डर भेजें</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Customer Welcome Modal -->
+    <div id="welcomeCustomerModal" class="modal" style="z-index: 2000;">
+        <div class="modal-content" style="text-align: center;">
+            <span class="close-btn" onclick="closeWelcomeModal()">&times;</span>
+            <h2 class="lang-text" data-hi="दुकान में आपका स्वागत है! 🎉" data-en="Welcome to the Shop! 🎉">दुकान में आपका स्वागत है! 🎉</h2>
+            <p class="lang-text" data-hi="आगे बढ़ने के लिए अपना नाम और नंबर दर्ज करें:" data-en="Enter your name and number to proceed:">आगे बढ़ने के लिए अपना नाम और नंबर दर्ज करें:</p>
+            <input type="text" id="welcomeName" data-hi-placeholder="आपका नाम" data-en-placeholder="Your Name" placeholder="आपका नाम" style="margin-bottom: 10px; width: 100%; box-sizing: border-box;" required>
+            <input type="text" id="welcomeMobile" data-hi-placeholder="मोबाइल नंबर" data-en-placeholder="Mobile Number" placeholder="मोबाइल नंबर" style="margin-bottom: 15px; width: 100%; box-sizing: border-box;" required>
+            <button onclick="saveCustomerDetails()" class="save-profile-btn lang-text" data-hi="दुकान देखें 🛍️" data-en="Enter Shop 🛍️" style="width: 100%;">दुकान देखें 🛍️</button>
+        </div>
+    </div>
+
+    <script>
+        const shopMobile = "{{ shop_mobile }}";
+        let cart = [];
+        let currentProduct = null;
+
+        document.addEventListener("DOMContentLoaded", function() {
+            const savedName = localStorage.getItem('customerName');
+            const savedMobile = localStorage.getItem('customerMobile');
+            if (!savedName || !savedMobile) {
+                document.getElementById('welcomeCustomerModal').style.display = 'block';
+            } else {
+                const cName = document.getElementById('custName');
+                const cMob = document.getElementById('custMobile');
+                if(cName) cName.value = savedName;
+                if(cMob) cMob.value = savedMobile;
+            }
+        });
+
+        function saveCustomerDetails() {
+            const name = document.getElementById('welcomeName').value.trim();
+            const mobile = document.getElementById('welcomeMobile').value.trim();
+            if (name && mobile) {
+                localStorage.setItem('customerName', name);
+                localStorage.setItem('customerMobile', mobile);
+                const cName = document.getElementById('custName');
+                const cMob = document.getElementById('custMobile');
+                if(cName) cName.value = name;
+                if(cMob) cMob.value = mobile;
+                closeWelcomeModal();
+            } else {
+                alert(typeof currentLang !== 'undefined' && currentLang === 'en' ? 'Please enter your name and mobile number.' : 'कृपया अपना नाम और मोबाइल नंबर भरें।');
+            }
+        }
+
+        function closeWelcomeModal() {
+            document.getElementById('welcomeCustomerModal').style.display = 'none';
+        }
+
+        function openProductModal(element) {
+            const title = element.getAttribute('data-title');
+            const price = element.getAttribute('data-price');
+            const size = element.getAttribute('data-size');
+            const quantity = element.getAttribute('data-quantity');
+            const productId = element.getAttribute('data-product-id');
+            const imageUrls = element.getAttribute('data-images');
+
+            document.getElementById('modalTitle').innerText = title + ' (ID: ' + (productId || 'N/A') + ')';
+            document.getElementById('modalPrice').innerText = '₹' + price;
+            document.getElementById('modalSize').innerText = size;
+            document.getElementById('modalQuantity').innerText = quantity;
+            
+            currentProduct = { title: title, price: parseFloat(price), size: size, id: productId };
+
+            const mainImg = document.getElementById('mainModalImage');
+            const thumbStrip = document.getElementById('modalThumbnails');
+            thumbStrip.innerHTML = '';
+            
+            if (imageUrls) {
+                const urls = imageUrls.split(',').filter(url => url.trim() !== '');
+                if(urls.length > 0) {
+                    mainImg.src = urls[0].startsWith('http') ? urls[0] : '/' + urls[0];
+                    mainImg.style.display = 'block';
+                    
+                    if(urls.length > 1) {
+                        urls.forEach((url, index) => {
+                            const thumb = document.createElement('img');
+                            thumb.src = url.startsWith('http') ? url : '/' + url;
+                            if(index === 0) thumb.classList.add('active');
+                            
+                            thumb.onclick = function() {
+                                mainImg.style.opacity = 0.4;
+                                setTimeout(() => {
+                                    mainImg.src = url.startsWith('http') ? url : '/' + url;
+                                    mainImg.style.opacity = 1;
+                                }, 150);
+                                
+                                document.querySelectorAll('.thumbnail-strip img').forEach(i => i.classList.remove('active'));
+                                this.classList.add('active');
+                            };
+                            thumbStrip.appendChild(thumb);
+                        });
+                    }
+                }
+            } else {
+                mainImg.style.display = 'none';
+            }
+
+            // WhatsApp Message Link
+            const msg = encodeURIComponent(`नमस्ते! मैं आपकी दुकान में "${title}" (ID: ${productId || 'N/A'}) के बारे में जानना चाहता हूँ। (कीमत: ₹${price})`);
+            document.getElementById('modalWhatsapp').href = `https://wa.me/91${shopMobile}?text=${msg}`;
+
+            const addToCartBtn = document.getElementById('modalAddToCart');
+            if (parseInt(quantity) <= 0) {
+                addToCartBtn.innerText = currentLang === 'hi' ? '🚫 आउट ऑफ स्टॉक' : '🚫 Out of Stock';
+                addToCartBtn.style.background = '#e2e8f0';
+                addToCartBtn.style.color = '#a0aec0';
+                addToCartBtn.style.boxShadow = 'none';
+                addToCartBtn.disabled = true;
+            } else {
+                addToCartBtn.innerText = currentLang === 'hi' ? '🛒 कार्ट में डालें' : '🛒 Add to Cart';
+                addToCartBtn.style.background = '';
+                addToCartBtn.style.color = '';
+                addToCartBtn.style.boxShadow = '';
+                addToCartBtn.disabled = false;
+            }
+
+            document.getElementById('productModal').style.display = 'block';
+        }
+
+        function closeProductModal() {
+            document.getElementById('productModal').style.display = 'none';
+        }
+        
+        function addCurrentToCart() {
+            if(currentProduct) {
+                addToCart(currentProduct.title, currentProduct.price, currentProduct.size, currentProduct.id, null);
+                closeProductModal();
+            }
+        }
+
+        function addToCart(title, price, size, id, event) {
+            if(event) event.stopPropagation(); // कार्ड पर क्लिक होने से रोके
+            
+            let existingItem = cart.find(item => item.title === title && item.size === size && item.id === id);
+            if(existingItem) {
+                existingItem.qty += 1;
+            } else {
+                cart.push({ title: title, price: parseFloat(price), size: size, id: id, qty: 1 });
+            }
+            updateCartUI();
+            
+            // छोटा सा अलर्ट दिखाएं
+            const btn = event ? event.target : document.getElementById('modalAddToCart');
+            const originalText = btn.innerText;
+            btn.innerText = currentLang === 'hi' ? "✅ जुड़ गया!" : "✅ Added!";
+            setTimeout(() => { btn.innerText = originalText; }, 1500);
+        }
+
+        function updateCartUI() {
+            const cartCount = document.getElementById('cartCount');
+            const floatingCart = document.getElementById('floatingCart');
+            const cartItems = document.getElementById('cartItems');
+            const cartTotal = document.getElementById('cartTotal');
+            
+            let count = 0;
+            let total = 0;
+            cartItems.innerHTML = '';
+            
+            cart.forEach((item, index) => {
+                count += item.qty;
+                total += item.price * item.qty;
+                
+                cartItems.innerHTML += `
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding: 10px 0;">
+                        <div style="flex-grow: 1;">
+                            <b>${item.title}</b><br>
+                            <small>${item.size} | ₹${item.price} | <span class="lang-text" data-hi="ID:" data-en="ID:">ID:</span> ${item.id || 'N/A'}</small>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <button onclick="changeQty(${index}, -1)" style="padding: 2px 8px; font-weight: bold; background: #e74c3c; color: white; border: none; border-radius: 3px; cursor: pointer;">-</button>
+                            <span>${item.qty}</span>
+                            <button onclick="changeQty(${index}, 1)" style="padding: 2px 8px; font-weight: bold; background: #27ae60; color: white; border: none; border-radius: 3px; cursor: pointer;">+</button>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            cartCount.innerText = count;
+            cartTotal.innerText = total;
+            updateUI(); // To translate dynamically injected text
+            
+            if(count > 0) {
+                floatingCart.style.display = 'block';
+            } else {
+                floatingCart.style.display = 'none';
+                closeCartModal();
+            }
+        }
+
+        function changeQty(index, delta) {
+            cart[index].qty += delta;
+            if(cart[index].qty <= 0) {
+                cart.splice(index, 1);
+            }
+            updateCartUI();
+        }
+
+        function openCartModal() {
+            document.getElementById('cartModal').style.display = 'block';
+        }
+
+        function closeCartModal() {
+            document.getElementById('cartModal').style.display = 'none';
+        }
+
+        function showCheckoutForm() {
+            document.getElementById('checkoutForm').style.display = 'block';
+            document.getElementById('showCheckoutBtn').style.display = 'none';
+        }
+
+        function submitAndCheckout(event) {
+            event.preventDefault();
+            const custName = document.getElementById('custName').value.trim();
+            const custMobile = document.getElementById('custMobile').value.trim();
+            
+            if(!custName || !custMobile) {
+                alert(currentLang === 'hi' ? 'कृपया अपना नाम और मोबाइल नंबर भरें।' : 'Please enter your name and mobile number.');
+                return;
+            }
+            
+            let msg = currentLang === 'hi' ? `नमस्ते! मैं ${custName} (${custMobile}), आपकी दुकान से निम्नलिखित चीजें ऑर्डर करना चाहता हूँ:\n\n` : `Hello! I am ${custName} (${custMobile}), I would like to order the following items from your shop:\n\n`;
+            let total = 0;
+            let orderDetailsArr = [];
+            
+            cart.forEach((item, i) => {
+                let itemTotal = item.price * item.qty;
+                total += itemTotal;
+                msg += `${i+1}. ${item.title} (ID: ${item.id || 'N/A'}) (${item.size}) - ₹${item.price} x ${item.qty} = ₹${itemTotal}\n`;
+                orderDetailsArr.push(`${item.title} (${item.size}) x ${item.qty}`);
+            });
+            msg += currentLang === 'hi' ? `\nकुल (Total Amount): ₹${total}` : `\nTotal Amount: ₹${total}`;
+            
+            const encodedMsg = encodeURIComponent(msg);
+            const waLink = `https://wa.me/91${shopMobile}?text=${encodedMsg}`;
+            
+            // Backend API par Order bhejein
+            fetch('/api/place_order', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ shop_name: '{{ shop_name }}', customer_name: custName, customer_mobile: custMobile, order_details: orderDetailsArr.join(', '), total_amount: total })
+            }).then(res => res.json()).then(data => {
+            if (!data.success) {
+                alert(currentLang === 'hi' ? 'डेटाबेस में ऑर्डर सेव नहीं हो सका। Error: ' + data.error : 'Failed to save order to DB. Error: ' + data.error);
+            }
+                window.open(waLink, '_blank');
+            }).catch(err => {
+            alert(currentLang === 'hi' ? 'नेटवर्क एरर। ऑर्डर डेटाबेस में सेव नहीं हुआ।' : 'Network error. Order not saved in DB.');
+                window.open(waLink, '_blank'); // Error hone par bhi whatsapp khol dein
+            });
+        }
+
+        // बाहर क्लिक करने पर पॉप-अप बंद हो जाएगा
+        window.onclick = function(event) {
+            const modal = document.getElementById('productModal');
+            const cartModal = document.getElementById('cartModal');
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+            if (event.target == cartModal) {
+                cartModal.style.display = "none";
+            }
+            
+            // Dropdown close logic
+            if (!event.target.matches('.profile-btn')) {
+                var dropdowns = document.getElementsByClassName("dropdown-content");
+                for (var i = 0; i < dropdowns.length; i++) {
+                    var openDropdown = dropdowns[i];
+                    if (openDropdown.classList.contains('show-dropdown')) {
+                        openDropdown.classList.remove('show-dropdown');
+                    }
+                }
+            }
+        }
+        
+        // Category Filters logic
+        let activeCategory = 'All';
+        function filterCategory(cat) {
+            activeCategory = cat;
+            document.querySelectorAll('.cat-btn').forEach(btn => {
+                if ((cat === 'All' && btn.classList.contains('all-cat-btn')) || btn.getAttribute('onclick') === `filterCategory('${cat}')`) {
+                    btn.classList.add('active-cat');
+                } else {
+                    btn.classList.remove('active-cat');
+                }
+            });
+            applyFilters();
+        }
+        
+        function applyFilters() {
+            let input = document.getElementById('searchInput').value.toLowerCase();
+            let cards = document.getElementsByClassName('card');
+            for (let i = 0; i < cards.length; i++) {
+                let title = cards[i].getAttribute('data-title').toLowerCase();
+                let cat = cards[i].getAttribute('data-category');
+                
+                let matchesSearch = title.indexOf(input) > -1;
+                let matchesCat = (activeCategory === 'All' || cat === activeCategory);
+                
+                if (matchesSearch && matchesCat) {
+                    cards[i].style.display = "";
+                } else {
+                    cards[i].style.display = "none";
+                }
+            }
+        }
+        
+        function shareShop() {
+            let titleText = currentLang === 'hi' ? 'हमारी दुकान से बेहतरीन प्रोडक्ट्स खरीदें!' : 'Buy the best products from our shop!';
+            let promptText = currentLang === 'hi' ? 'इस लिंक को कॉपी करके शेयर करें:' : 'Copy this link to share:';
+            if (navigator.share) {
+                navigator.share({ title: '{{ shop_name }}', text: titleText, url: window.location.href }).catch(err => console.log('Error sharing', err));
+            } else { prompt(promptText, window.location.href); }
+        }
+    </script>
+    {% else %}
+    <!-- दुकानदार व्यू (Admin View) -->
+    <div class="container" style="max-width: 600px; position: relative;">
+    {% if error %}
+        <div class="alert alert-error">{{ error | safe }}</div>
+    {% endif %}
+    {% if success %}
+        <div class="alert alert-success">{{ success | safe }}</div>
+    {% endif %}
+
+    {% if session.get('shop_name') %}
+    <div class="profile-menu">
+        <button class="profile-btn" onclick="toggleProfileMenu(event)">⚙️ मेनू ▼</button>
+        <div class="dropdown-content" id="profileDropdown">
+            <a onclick="showTab('add_product_tab')" class="lang-text" data-hi="➕ नया प्रोडक्ट जोड़ें" data-en="➕ Add New Product">➕ नया प्रोडक्ट जोड़ें</a>
+            <a onclick="showTab('manage_products_tab')" class="lang-text" data-hi="📦 मैनेज प्रोडक्ट्स" data-en="📦 Manage Products">📦 मैनेज प्रोडक्ट्स</a>
+            <a onclick="showTab('orders_tab')" class="lang-text" data-hi="📋 मेरे ऑर्डर्स" data-en="📋 My Orders">📋 मेरे ऑर्डर्स</a>
+            <a onclick="showTab('profile_tab')" class="lang-text" data-hi="👤 मेरी प्रोफाइल" data-en="👤 My Profile">👤 मेरी प्रोफाइल</a>
+            <hr style="margin: 5px 0; border: 0; border-top: 1px solid #334155;">
+            <div style="padding: 5px 15px; font-size: 11px; color: #94a3b8; font-weight: bold; text-transform: uppercase;">⚙️ Settings</div>
+            <a onclick="toggleDarkMode()" id="darkModeBtn">🌙 डार्क मोड / Dark Mode</a>
+            <a onclick="toggleLanguage()" id="langBtn">🌐 English / हिन्दी</a>
+            <hr style="margin: 5px 0; border: 0; border-top: 1px solid #334155;">
+            <a href="/logout" style="color: #e74c3c;" class="lang-text" data-hi="🚪 लॉगआउट करें" data-en="🚪 Logout">🚪 लॉगआउट करें</a>
+        </div>
+    </div>
+
+    <h2 class="lang-text" data-hi="{{ session['shop_name'] }} का डैशबोर्ड" data-en="{{ session['shop_name'] }}'s Dashboard">{{ session['shop_name'] }} का डैशबोर्ड</h2>
+    <p style="text-align: center; color: #7f8c8d; margin-top: -15px; font-size: 14px;"><span class="lang-text" data-hi="शॉप ID:" data-en="Shop ID:">शॉप ID:</span> <b>{{ session['shop_id'] }}</b></p>
+    
+    <div id="add_product_tab" {% if active_admin_tab != 'add_product_tab' %}style="display: none;"{% endif %}>
+    <div class="add-product-card">
+        <h3 class="lang-text" data-hi="➕ नया प्रोडक्ट जोड़ें" data-en="➕ Add New Product">➕ नया प्रोडक्ट जोड़ें</h3>
+        <form method="POST" enctype="multipart/form-data" class="edit-profile-form">
+            <input type="hidden" name="action" value="add_product">
+            <div class="form-group">
+                <label class="lang-text" data-hi="📦 प्रोडक्ट का नाम:" data-en="📦 Product Name:">📦 प्रोडक्ट का नाम:</label>
+                <input type="text" name="product" data-hi-placeholder="प्रोडक्ट का नाम" data-en-placeholder="Product name" required>
+            </div>
+            
+            <div class="form-group">
+                <label class="lang-text" data-hi="🏷️ प्रोडक्ट की केटेगरी (Category):" data-en="🏷️ Product Category:">🏷️ प्रोडक्ट की केटेगरी (Category):</label>
+                <input type="text" name="product_category" data-hi-placeholder="जैसे: T-Shirt, Mobile, Shoes" data-en-placeholder="e.g. T-Shirt, Mobile, Shoes" placeholder="जैसे: T-Shirt, Mobile, Shoes" required>
+            </div>
+            
+            <div class="form-group">
+                <label class="lang-text" data-hi="💰 कीमत (Price - ₹):" data-en="💰 Price (₹):">💰 कीमत (Price - ₹):</label>
+                <input type="number" name="price" data-hi-placeholder="कीमत" data-en-placeholder="Price" required>
+            </div>
+
+            <div class="form-group">
+                {% if session.get('category') == 'electronics' %}
+                    <label class="lang-text" data-hi="⚙️ ब्रांड / वारंटी (Brand/Warranty):" data-en="⚙️ Brand / Warranty:">⚙️ ब्रांड / वारंटी (Brand/Warranty):</label>
+                    <input type="text" name="size" data-hi-placeholder="जैसे: Samsung, 1 Year" data-en-placeholder="e.g. Samsung, 1 Year">
+                {% elif session.get('category') in ['clothing', 'footwear'] %}
+                    <label class="lang-text" data-hi="📏 साइज (Size):" data-en="📏 Size:">📏 साइज (Size):</label>
+                    <input type="text" name="size" data-hi-placeholder="जैसे: M, L, XL, 8, 9" data-en-placeholder="e.g. M, L, XL, 8, 9">
+                {% elif session.get('category') in ['grocery', 'pharmacy'] %}
+                    <label class="lang-text" data-hi="⚖️ वजन/मात्रा (Weight/Pack):" data-en="⚖️ Weight / Pack:">⚖️ वजन/मात्रा (Weight/Pack):</label>
+                    <input type="text" name="size" data-hi-placeholder="जैसे: 1kg, 10 Tablets" data-en-placeholder="e.g. 1kg, 10 Tablets">
+                {% elif session.get('category') == 'furniture' %}
+                    <label class="lang-text" data-hi="🪵 मटेरियल / रंग (Material/Color):" data-en="🪵 Material / Color:">🪵 मटेरियल / रंग (Material/Color):</label>
+                    <input type="text" name="size" data-hi-placeholder="जैसे: Wood, Black" data-en-placeholder="e.g. Wood, Black">
+                {% else %}
+                    <label class="lang-text" data-hi="ℹ️ अतिरिक्त जानकारी (Extra Info):" data-en="ℹ️ Additional Info:">ℹ️ अतिरिक्त जानकारी (Extra Info):</label>
+                    <input type="text" name="size" data-hi-placeholder="जैसे: कलर, साइज या वजन" data-en-placeholder="e.g. Color, Size, Weight">
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label class="lang-text" data-hi="📊 मात्रा (Stock Quantity):" data-en="📊 Stock Quantity:">📊 मात्रा (Stock Quantity):</label>
+                <input type="number" name="quantity" required>
+            </div>
+
+            <div class="form-group">
+                <label class="lang-text" data-hi="📸 प्रोडक्ट की फोटो (Image):" data-en="📸 Product Images:">📸 प्रोडक्ट की फोटो (Image):</label>
+                <input type="file" name="product_image" accept="image/*" multiple required onchange="previewImages(event)">
+                <small class="lang-text" data-hi="एक से ज़्यादा फोटो चुनने के लिए Ctrl दबाएं या मोबाइल में Long Press करें।" data-en="Press Ctrl or Long Press on mobile to select multiple photos." style="color: #7f8c8d; font-size: 12px; text-transform: none;">एक से ज़्यादा फोटो चुनने के लिए Ctrl दबाएं या मोबाइल में Long Press करें。</small>
+                <div id="imagePreview" style="display: flex; gap: 10px; margin-top: 10px; overflow-x: auto;"></div>
+            </div>
+
+            <button type="submit" class="submit-product-btn lang-text" data-hi="🚀 प्रोडक्ट सेव करें" data-en="🚀 Save Product">🚀 प्रोडक्ट सेव करें</button>
+        </form>
+    </div>
+    <div style="text-align: center; margin-top: 15px;">
+        <a href="/shop/{{ session['shop_name'] }}" target="_blank" style="color: #3498db; text-decoration: none;" class="lang-text" data-hi="अपनी पब्लिक शॉप देखें 👁️" data-en="View your public shop 👁️">अपनी पब्लिक शॉप देखें 👁️</a>
+    </div>
+    
+    <script>
+        // दुकानदार को अपलोड की गई फोटो का प्रीव्यू दिखाने के लिए
+        function previewImages(event) {
+            const previewContainer = document.getElementById('imagePreview');
+            previewContainer.innerHTML = '';
+            const files = event.target.files;
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                if(file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const img = document.createElement('img');
+                        img.src = e.target.result;
+                        img.style.height = '60px';
+                        img.style.borderRadius = '5px';
+                        img.style.border = '1px solid #ddd';
+                        previewContainer.appendChild(img);
+                    }
+                    reader.readAsDataURL(file);
+                }
+            }
+        }
+    </script>
+    </div>
+
+    <div id="profile_tab" {% if active_admin_tab != 'profile_tab' %}style="display: none;"{% endif %}>
+        <!-- प्रोफाइल मेन कार्ड -->
+        <div class="profile-card">
+            <!-- कवर इमेज और अवतार -->
+            <div class="profile-header">
+                <div class="profile-avatar">
+                    {% if user_profile.profile_pic_url %}
+                        {% set prof_img = user_profile.profile_pic_url.replace('\\', '/') %}
+                        <img src="{% if prof_img.startswith('http') %}{{ prof_img }}{% else %}/{{ prof_img }}{% endif %}" style="width: 100%; height: 100%; object-fit: cover;" alt="Profile">
+                    {% else %}
+                        👤
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="profile-body">
+                <h2 class="profile-name">{{ user_profile.owner_name }}</h2>
+                <div class="profile-id"><span class="lang-text" data-hi="शॉप ID:" data-en="Shop ID:">शॉप ID:</span> <strong>{{ session['shop_id'] }}</strong></div>
+                
+                <div class="profile-stats-grid">
+                    <div class="stat-box">
+                        <div class="stat-label lang-text" data-hi="दुकान का नाम" data-en="Shop Name">दुकान का नाम</div>
+                        <div class="stat-value">{{ session['shop_name'] }}</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label lang-text" data-hi="मोबाइल नंबर" data-en="Mobile Number">मोबाइल नंबर</div>
+                        <div class="stat-value">+91 {{ user_profile.mobile_number }}</div>
+                    </div>
+                    <div class="stat-box full-width" style="border-left-color: #38a169;">
+                        <div class="stat-label lang-text" data-hi="केटेगरी (Category)" data-en="Category">केटेगरी (Category)</div>
+                        <div class="stat-badge">🏷️ {{ user_profile.category | capitalize }}</div>
+                    </div>
+                    <div class="stat-box full-width" style="border-left-color: #3182ce;">
+                        <div class="stat-label lang-text" data-hi="कुल जोड़े गए प्रोडक्ट्स" data-en="Total Products Added">कुल जोड़े गए प्रोडक्ट्स</div>
+                        <div class="stat-value" style="font-size: 18px; color: #3182ce;">📦 {{ user_products|length }} <span class="lang-text" data-hi="आइटम" data-en="Items">आइटम</span></div>
+                    </div>
+                    <div class="stat-box full-width" style="border-left-color: #ed8936;">
+                        <div class="stat-label lang-text" data-hi="दुकान के कुल व्यूज़" data-en="Total Shop Views">दुकान के कुल व्यूज़</div>
+                        <div class="stat-value" style="font-size: 18px; color: #ed8936;">👁️ {{ user_profile.views_count|default(0) }} <span class="lang-text" data-hi="बार देखा गया" data-en="Views">बार देखा गया</span></div>
+                    </div>
+                </div>
+                <button class="profile-edit-btn lang-text" data-hi="✏️ प्रोफाइल एडिट करें" data-en="✏️ Edit Profile" onclick="openEditProfileModal('{{ (user_profile.owner_name or '')|replace('\'', '\\\'')|e }}', '{{ user_profile.mobile_number }}', '{{ user_profile.category }}')">✏️ प्रोफाइल एडिट करें</button>
+            </div>
+        </div>
+
+        <!-- लिंक और QR कोड कार्ड्स -->
+        <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+            <!-- दुकान का लिंक कार्ड -->
+            <div style="flex: 1; min-width: 200px; background: #fff; border: 1px solid #e1e8ed; border-radius: 10px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); text-align: center;">
+                <div style="font-size: 30px; margin-bottom: 10px;">🔗</div>
+                <h4 style="margin-top: 0; color: #2c3e50;" class="lang-text" data-hi="दुकान का लिंक" data-en="Shop Link">दुकान का लिंक</h4>
+                <p style="font-size: 13px; color: #7f8c8d;" class="lang-text" data-hi="ग्राहकों के साथ शेयर करें" data-en="Share with customers">ग्राहकों के साथ शेयर करें</p>
+                <input type="text" value="{{ request.host_url }}shop/{{ session['shop_name'] }}" readonly style="width: 100%; text-align: center; background: #f4f7f6; margin-bottom: 15px; border: 1px dashed #ccc; padding: 8px; font-size: 12px; color: #555;">
+                <a href="/shop/{{ session['shop_name'] }}" target="_blank" style="display: inline-block; background: #3498db; color: white; padding: 8px 15px; text-decoration: none; border-radius: 5px; font-size: 14px; font-weight: bold; width: auto;" class="lang-text" data-hi="दुकान खोलें" data-en="Open Shop">दुकान खोलें</a>
+            </div>
+
+            <!-- QR कोड कार्ड -->
+            <div style="flex: 1; min-width: 200px; background: #fff; border: 1px solid #e1e8ed; border-radius: 10px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); text-align: center;">
+                <h4 style="margin-top: 0; color: #2c3e50;" class="lang-text" data-hi="📱 QR कोड" data-en="📱 QR Code">📱 QR कोड</h4>
+                <img src="/static/qr_codes/{{ qr_filename }}" alt="Shop QR Code" style="width: 100px; border: 1px solid #eee; border-radius: 8px; padding: 5px; background: white; margin-bottom: 10px;">
+                <br>
+                <a href="/static/qr_codes/{{ qr_filename }}" download="QR_{{ session['shop_name'] }}.png" style="display: inline-block; background: #27ae60; color: white; padding: 8px 15px; text-decoration: none; border-radius: 5px; font-size: 14px; font-weight: bold; width: auto;" class="lang-text" data-hi="⬇️ डाउनलोड करें" data-en="⬇️ Download">⬇️ डाउनलोड करें</a>
+            </div>
+        </div>
+    </div>
+
+    <div id="manage_products_tab" {% if active_admin_tab != 'manage_products_tab' %}style="display: none;"{% endif %}>
+        <div class="manage-products-header">
+            <h3 class="lang-text" data-hi="📦 मैनेज प्रोडक्ट्स" data-en="📦 Manage Products">📦 मैनेज प्रोडक्ट्स</h3>
+            <span class="product-count-badge"><span class="lang-text" data-hi="कुल:" data-en="Total:">कुल:</span> {{ user_products|length }} <span class="lang-text" data-hi="आइटम" data-en="Items">आइटम</span></span>
+        </div>
+        
+        <div style="display: flex; flex-direction: column; max-height: 550px; overflow-y: auto; padding-right: 5px; padding-bottom: 20px;">
+            {% for p in user_products %}
+        {% set val = p.get('is_hidden') | string | lower %}
+        {% set is_hidden = (val == 'true' or val == '1' or val == 't' or val == 'yes') %}
+        <div class="manage-product-card {% if is_hidden %}hidden-product{% endif %}">
+                {% if p.image_url %}
+                {% set manage_img = p.image_url.split(',')[0].replace('\\', '/') %}
+                <img src="{% if manage_img.startswith('http') %}{{ manage_img }}{% else %}/{{ manage_img }}{% endif %}" class="manage-product-img" loading="lazy">
+                {% else %}
+                <div class="manage-product-img" style="background: #edf2f7; display: flex; align-items: center; justify-content: center; font-size: 30px;">🛍️</div>
+                {% endif %}
+                
+                <div class="manage-product-info">
+                    <div class="manage-product-id">ID: {{ p.product_id }}</div>
+                    <div class="manage-product-title">{{ p.product }}</div>
+                    <div>
+                        <span class="manage-product-price">₹{{ p.price }}</span>
+                        <span class="manage-product-stock">उपलब्ध: {{ p.quantity }}</span>
+                    </div>
+                    
+                    <div class="manage-product-actions">
+                        <button type="button" class="btn-modern-edit" onclick="openEditModal('{{ p.product_id }}', '{{ (p.product or '')|replace('\'', '\\\'')|e }}', '{{ p.price }}', '{{ (p.size or '')|replace('\'', '\\\'')|e }}', '{{ p.quantity }}')">✏️ एडिट</button>
+                        
+                        <form method="POST" style="margin: 0; flex: 1; display: flex;">
+                            <input type="hidden" name="action" value="toggle_hide">
+                            <input type="hidden" name="product_id" value="{{ p.product_id }}">
+                        {% if is_hidden %}
+                            <button type="submit" class="btn-modern-hide lang-text" style="width: 100%; background: #48bb78; color: white;" data-hi="👁️ दिखाएं (Unhide)" data-en="👁️ Show (Unhide)">👁️ दिखाएं (Unhide)</button>
+                        {% else %}
+                            <button type="submit" class="btn-modern-hide lang-text" style="width: 100%;" data-hi="🚫 छिपाएं (Hide)" data-en="🚫 Hide">🚫 छिपाएं (Hide)</button>
+                        {% endif %}
+                        </form>
+                        
+                        <form method="POST" style="margin: 0; flex: 1; display: flex;" onsubmit="return confirm('क्या आप वाकई इस प्रोडक्ट को डिलीट करना चाहते हैं?');">
+                            <input type="hidden" name="action" value="delete_product">
+                            <input type="hidden" name="product_id" value="{{ p.product_id }}">
+                            <button type="submit" class="btn-modern-delete" style="width: 100%;">🗑️ डिलीट</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+            {% if not user_products %}
+            <p style="text-align: center; color: #777;" class="lang-text" data-hi="अभी तक कोई प्रोडक्ट नहीं जोड़ा गया है।" data-en="No products added yet.">अभी तक कोई प्रोडक्ट नहीं जोड़ा गया है।</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Orders Tab -->
+    <div id="orders_tab" {% if active_admin_tab != 'orders_tab' %}style="display: none;"{% endif %}>
+        <div class="manage-products-header">
+            <h3 class="lang-text" data-hi="📋 मेरे ऑर्डर्स" data-en="📋 My Orders">📋 मेरे ऑर्डर्स</h3>
+            <span class="product-count-badge">{{ user_orders|length }} Orders</span>
+        </div>
+        
+        <div style="display: flex; flex-direction: column; max-height: 550px; overflow-y: auto;">
+            {% for order in user_orders %}
+            <div class="order-card">
+                <div class="order-header">
+                    <span class="order-id">#ORD-{{ order.id }}</span>
+                    <span class="status-badge status-{{ order.status }}">{{ order.status }}</span>
+                </div>
+                <div class="order-cust">👤 {{ order.customer_name }} <br><span style="font-size:14px; font-weight:normal;">📞 {{ order.customer_mobile }}</span></div>
+                <div class="order-items">📦 {{ order.order_details }}</div>
+                <div class="order-total">💰 ₹{{ order.total_amount }}</div>
+                
+                <form method="POST" style="display: flex; gap: 10px; align-items: center;">
+                    <input type="hidden" name="action" value="update_order">
+                    <input type="hidden" name="order_id" value="{{ order.id }}">
+                    <select name="status" style="flex: 1; padding: 8px; border-radius: 8px; font-size: 14px; margin: 0;">
+                        <option value="Pending" {% if order.status == 'Pending' %}selected{% endif %}>Pending (पेंडिंग)</option>
+                        <option value="Delivered" {% if order.status == 'Delivered' %}selected{% endif %}>Delivered (डिलीवर हो गया)</option>
+                        <option value="Cancelled" {% if order.status == 'Cancelled' %}selected{% endif %}>Cancelled (रद्द किया)</option>
+                    </select>
+                    <button type="submit" style="margin: 0; width: auto; padding: 8px 15px; background: #3182ce; margin-top: 0;" class="lang-text" data-hi="अपडेट" data-en="Update">अपडेट</button>
+                </form>
+            </div>
+            {% endfor %}
+            {% if not user_orders %}
+            <p style="text-align: center; color: #777;" class="lang-text" data-hi="अभी तक कोई ऑर्डर नहीं आया है।" data-en="No orders received yet.">अभी तक कोई ऑर्डर नहीं आया है।</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Edit Product Modal -->
+    <div id="editProductModal" class="modal edit-profile-modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeEditModal()">&times;</span>
+            <h2 class="lang-text" data-hi="✏️ प्रोडक्ट अपडेट करें" data-en="✏️ Update Product">✏️ प्रोडक्ट अपडेट करें</h2>
+            <form method="POST" class="edit-profile-form">
+                <input type="hidden" name="action" value="edit_product">
+                <input type="hidden" id="edit_product_id" name="product_id">
+                
+                <div class="form-group">
+                    <label class="lang-text" data-hi="📦 प्रोडक्ट का नाम:" data-en="📦 Product Name:">📦 प्रोडक्ट का नाम:</label>
+                    <input type="text" id="edit_product" name="product" required>
+                </div>
+                <div class="form-group">
+                    <label class="lang-text" data-hi="🏷️ प्रोडक्ट की केटेगरी:" data-en="🏷️ Product Category:">🏷️ प्रोडक्ट की केटेगरी:</label>
+                    <input type="text" id="edit_category" name="product_category" required>
+                </div>
+                <div class="form-group">
+                    <label class="lang-text" data-hi="💰 कीमत (Price - ₹):" data-en="💰 Price (₹):">💰 कीमत (Price - ₹):</label>
+                    <input type="number" id="edit_price" name="price" required>
+                </div>
+                <div class="form-group">
+                    <label class="lang-text" data-hi="📏 विवरण / साइज:" data-en="📏 Details / Size:">📏 विवरण / साइज:</label>
+                    <input type="text" id="edit_size" name="size">
+                </div>
+                <div class="form-group">
+                    <label class="lang-text" data-hi="📊 मात्रा (Quantity):" data-en="📊 Quantity:">📊 मात्रा (Quantity):</label>
+                    <input type="number" id="edit_quantity" name="quantity" required>
+                </div>
+                
+                <div style="display: flex; gap: 10px; margin-top: 15px;">
+                    <button type="submit" class="save-profile-btn lang-text" data-hi="💾 अपडेट करें" data-en="💾 Update" style="margin: 0; flex: 2; width: auto;">💾 अपडेट करें</button>
+                    <button type="button" onclick="closeEditModal()" class="cancel-profile-btn lang-text" data-hi="रद्द करें" data-en="Cancel" style="margin: 0; flex: 1; width: auto;">रद्द करें</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Profile Modal -->
+    <div id="editProfileModal" class="modal edit-profile-modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeEditProfileModal()">&times;</span>
+            <h2 class="lang-text" data-hi="⚙️ प्रोफाइल अपडेट करें" data-en="⚙️ Update Profile">⚙️ प्रोफाइल अपडेट करें</h2>
+            <form method="POST" enctype="multipart/form-data" class="edit-profile-form">
+                <input type="hidden" name="action" value="edit_profile">
+                
+                <div class="form-group">
+                    <label class="lang-text" data-hi="📸 प्रोफाइल फोटो (वैकल्पिक):" data-en="📸 Profile Photo (Optional):">📸 प्रोफाइल फोटो (वैकल्पिक):</label>
+                    <input type="file" id="profile_pic_input" name="profile_pic" accept="image/*" onclick="this.value=null;" onchange="openCropModal(event)">
+                </div>
+                <div class="form-group">
+                    <label class="lang-text" data-hi="👤 ओनर का नाम:" data-en="👤 Owner Name:">👤 ओनर का नाम:</label>
+                    <input type="text" id="edit_profile_name" name="owner_name" required>
+                </div>
+                <div class="form-group">
+                    <label class="lang-text" data-hi="📱 मोबाइल नंबर:" data-en="📱 Mobile Number:">📱 मोबाइल नंबर:</label>
+                    <input type="text" id="edit_profile_mobile" name="mobile_number" pattern="[0-9]{10}" required>
+                </div>
+                <div class="form-group">
+                    <label class="lang-text" data-hi="🔑 नया पासवर्ड (वैकल्पिक):" data-en="🔑 New Password (Optional):">🔑 नया पासवर्ड (वैकल्पिक):</label>
+                    <input type="password" name="password" data-hi-placeholder="नया पासवर्ड (बदलना हो तभी भरें)" data-en-placeholder="New password (if changing)">
+                </div>
+                <div class="form-group">
+                    <label class="lang-text" data-hi="🏷️ दुकान की केटेगरी:" data-en="🏷️ Shop Category:">🏷️ दुकान की केटेगरी:</label>
+                    <select id="edit_profile_category" name="category" required>
+                        <option value="clothing" class="lang-text" data-hi="कपड़े (Clothing & Apparel)" data-en="Clothing & Apparel">कपड़े (Clothing & Apparel)</option>
+                        <option value="electronics" class="lang-text" data-hi="इलेक्ट्रॉनिक्स (Electronics & Mobile)" data-en="Electronics & Mobile">इलेक्ट्रॉनिक्स (Electronics & Mobile)</option>
+                        <option value="grocery" class="lang-text" data-hi="किराना (Grocery & Supermarket)" data-en="Grocery & Supermarket">किराना (Grocery & Supermarket)</option>
+                        <option value="furniture" class="lang-text" data-hi="फर्नीचर (Furniture & Decor)" data-en="Furniture & Decor">फर्नीचर (Furniture & Decor)</option>
+                        <option value="footwear" class="lang-text" data-hi="जूते-चप्पल (Footwear)" data-en="Footwear">जूते-चप्पल (Footwear)</option>
+                        <option value="pharmacy" class="lang-text" data-hi="मेडिकल/फार्मेसी (Pharmacy)" data-en="Pharmacy">मेडिकल/फार्मेसी (Pharmacy)</option>
+                        <option value="books" class="lang-text" data-hi="किताबें (Books & Stationery)" data-en="Books & Stationery">किताबें (Books & Stationery)</option>
+                        <option value="hardware" class="lang-text" data-hi="हार्डवेयर (Hardware & Tools)" data-en="Hardware & Tools">हार्डवेयर (Hardware & Tools)</option>
+                        <option value="general" class="lang-text" data-hi="अन्य (General Store)" data-en="Other (General Store)">अन्य (General Store)</option>
+                    </select>
+                </div>
+                
+                <div style="display: flex; gap: 10px; margin-top: 15px;">
+                    <button type="submit" class="save-profile-btn lang-text" data-hi="💾 सेव करें" data-en="💾 Save" style="margin: 0; flex: 2; width: auto;">💾 सेव करें</button>
+                    <button type="button" onclick="closeEditProfileModal()" class="cancel-profile-btn lang-text" data-hi="रद्द करें" data-en="Cancel" style="margin: 0; flex: 1; width: auto;">रद्द करें</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Crop Image Modal -->
+    <div id="cropModal" class="modal" style="z-index: 2000;">
+        <div class="modal-content" style="max-width: 420px; text-align: center; border-radius: 15px; padding: 25px;">
+            <h3 style="margin-top: 0; color: #2c3e50; font-size: 20px;" class="lang-text" data-hi="🖼️ प्रोफाइल फोटो सेट करें" data-en="🖼️ Set Profile Photo">🖼️ प्रोफाइल फोटो सेट करें</h3>
+            <p style="font-size: 13px; color: #7f8c8d; margin-bottom: 15px;" class="lang-text" data-hi="फोटो को खींचें (Drag) या ज़ूम (Zoom) करके गोल आकार में सेट करें" data-en="Drag or zoom to fit your photo in the circle">फोटो को खींचें (Drag) या ज़ूम (Zoom) करके गोल आकार में सेट करें</p>
+            <div style="max-height: 400px; overflow: hidden; margin-bottom: 20px; border-radius: 10px; background: #eee; box-shadow: inset 0 0 10px rgba(0,0,0,0.1);">
+                <img id="cropImage" style="max-width: 100%; display: block;">
+            </div>
+            <div style="display: flex; gap: 15px;">
+                <button type="button" onclick="confirmCrop()" style="background: #27ae60; margin: 0; flex: 1; border-radius: 8px;" class="lang-text" data-hi="✅ सेट करें" data-en="✅ Set">✅ सेट करें</button>
+                <button type="button" onclick="closeCropModal()" style="background: #e74c3c; margin: 0; flex: 1; border-radius: 8px;" class="lang-text" data-hi="❌ रद्द करें" data-en="❌ Cancel">❌ रद्द करें</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showTab(tabName) {
+            document.getElementById('add_product_tab').style.display = 'none';
+            document.getElementById('profile_tab').style.display = 'none';
+            document.getElementById('manage_products_tab').style.display = 'none';
+            document.getElementById('orders_tab').style.display = 'none';
+            document.getElementById(tabName).style.display = 'block';
+            
+            // ड्रॉपडाउन मेनू को क्लिक करते ही तुरंत बंद करने के लिए (ताकि टैब स्विच फास्ट लगे)
+            const dropdown = document.getElementById('profileDropdown');
+            if(dropdown) dropdown.classList.remove('show-dropdown');
+        }
+        
+        function openEditModal(id, name, price, size, quantity, category) {
+            document.getElementById('edit_product_id').value = id;
+            document.getElementById('edit_product').value = name;
+            document.getElementById('edit_price').value = price;
+            document.getElementById('edit_size').value = size;
+            document.getElementById('edit_quantity').value = quantity;
+            const catInput = document.getElementById('edit_category');
+            if(catInput) { catInput.value = category || 'General'; }
+            document.getElementById('editProductModal').style.display = 'block';
+        }
+        
+        function closeEditModal() {
+            document.getElementById('editProductModal').style.display = 'none';
+        }
+        
+        function openEditProfileModal(name, mobile, category) {
+            document.getElementById('edit_profile_name').value = name;
+            document.getElementById('edit_profile_mobile').value = mobile;
+            document.getElementById('edit_profile_category').value = category;
+            document.getElementById('editProfileModal').style.display = 'block';
+        }
+        function closeEditProfileModal() {
+            document.getElementById('editProfileModal').style.display = 'none';
+        }
+        
+        function toggleProfileMenu(event) {
+            document.getElementById("profileDropdown").classList.toggle("show-dropdown");
+            if(event) event.stopPropagation();
+        }
+        
+        let cropper;
+        let originalFile;
+
+        function openCropModal(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            // लोडिंग स्क्रीन दिखाएँ
+            document.getElementById('global-loader').style.display = 'flex';
+            
+            originalFile = file;
+
+            // FileReader की जगह URL.createObjectURL का उपयोग (यह बहुत फ़ास्ट है)
+            const imgUrl = URL.createObjectURL(file);
+            const img = document.getElementById('cropImage');
+            img.src = imgUrl;
+            document.getElementById('cropModal').style.display = 'block';
+            
+            if (cropper) { cropper.destroy(); cropper = null; }
+            
+            // पॉप-अप को स्क्रीन पर सही से रेंडर होने का समय दें (100ms), फिर क्रॉपर चालू करें
+            setTimeout(() => {
+                cropper = new Cropper(img, {
+                    aspectRatio: 1, // यह सुनिश्चित करता है कि क्रॉप 1:1 (Square) ही होगा
+                    viewMode: 1,
+                    autoCropArea: 1,
+                    ready: function() {
+                        // क्रॉपर रेडी होते ही लोडिंग स्क्रीन हटा दें
+                        document.getElementById('global-loader').style.display = 'none';
+                    }
+                });
+            }, 100);
+        }
+
+        function closeCropModal() {
+            document.getElementById('cropModal').style.display = 'none';
+            if (cropper) { cropper.destroy(); cropper = null; }
+            document.getElementById('profile_pic_input').value = ""; // कैंसिल करने पर इनपुट क्लियर कर दें
+        }
+
+        function confirmCrop() {
+            if (!cropper) return;
+            const canvas = cropper.getCroppedCanvas({ width: 300, height: 300 });
+            
+            // इमेज को JPEG में बदलें और 70% क्वालिटी पर कंप्रेस करें (ताकि अपलोड बहुत फास्ट हो)
+            canvas.toBlob(function(blob) {
+                const newFileName = originalFile.name.replace(/\.[^/.]+$/, "") + ".jpg";
+                const croppedFile = new File([blob], newFileName, { type: 'image/jpeg' });
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(croppedFile);
+                document.getElementById('profile_pic_input').files = dataTransfer.files; // कटी हुई फोटो को फॉर्म में डाल दें
+                
+                document.getElementById('cropModal').style.display = 'none';
+                if (cropper) { cropper.destroy(); cropper = null; }
+            }, 'image/jpeg', 0.7);
+        }
+    </script>
+    {% else %}
+    
+        <!-- लॉगिन फॉर्म (Login) -->
+        <div id="login-section" class="{% if active_tab == 'signup' %}hidden{% endif %}">
+            <h2 class="lang-text" data-hi="अपनी दुकान में लॉगिन करें" data-en="Login to your shop">अपनी दुकान में लॉगिन करें</h2>
+            <form method="POST">
+                <input type="hidden" name="action" value="login">
+                <div class="form-group">
+                    <label class="lang-text" data-hi="शॉप ID या मोबाइल नंबर:" data-en="Shop ID or Mobile Number:">शॉप ID या मोबाइल नंबर:</label>
+                    <input type="text" name="login_id" data-hi-placeholder="अपनी 7-अंकों की ID या मोबाइल नंबर दर्ज करें" data-en-placeholder="Enter 7-digit ID or mobile number" required>
+                </div>
+                <div class="form-group">
+                    <label class="lang-text" data-hi="पासवर्ड:" data-en="Password:">पासवर्ड:</label>
+                    <input type="password" name="password" required>
+                </div>
+                <button type="submit" class="lang-text" data-hi="लॉगिन करें" data-en="Login">लॉगिन करें</button>
+            </form>
+            <div class="toggle-link">
+                <span class="lang-text" data-hi="अकाउंट नहीं है?" data-en="Don't have an account?">अकाउंट नहीं है?</span> <span onclick="toggleForms()" class="lang-text" data-hi="नया अकाउंट बनाएं (Sign Up)" data-en="Create a new account (Sign Up)" style="text-decoration: underline; cursor: pointer;">नया अकाउंट बनाएं (Sign Up)</span>
+            </div>
+        </div>
+
+        <!-- साइन-अप फॉर्म (Sign Up) -->
+        <div id="signup-section" class="{% if active_tab != 'signup' %}hidden{% endif %}">
+            <h2 class="lang-text" data-hi="नया अकाउंट बनाएं (Sign Up)" data-en="Create a new account (Sign Up)">नया अकाउंट बनाएं (Sign Up)</h2>
+            <form method="POST">
+                <input type="hidden" name="action" value="signup">
+                <div class="form-group">
+                    <label class="lang-text" data-hi="ओनर का नाम:" data-en="Owner Name:">ओनर का नाम:</label>
+                    <input type="text" name="owner_name" required>
+                </div>
+                <div class="form-group">
+                    <label class="lang-text" data-hi="दुकान का नाम (बिना स्पेस के):" data-en="Shop Name (No spaces):">दुकान का नाम (बिना स्पेस के):</label>
+                    <input type="text" name="shop_name" required>
+                </div>
+                <div class="form-group">
+                    <label class="lang-text" data-hi="मोबाइल नंबर:" data-en="Mobile Number:">मोबाइल नंबर:</label>
+                    <input type="text" name="mobile_number" pattern="[0-9]{10}" data-hi-placeholder="10-अंकों का मोबाइल नंबर" data-en-placeholder="10-digit mobile number" required>
+                </div>
+                <div class="form-group">
+                    <label class="lang-text" data-hi="दुकान की केटेगरी (Category):" data-en="Shop Category:">दुकान की केटेगरी (Category):</label>
+                    <select name="category" required>
+                        <option value="clothing" class="lang-text" data-hi="कपड़े (Clothing & Apparel)" data-en="Clothing & Apparel">कपड़े (Clothing & Apparel)</option>
+                        <option value="electronics" class="lang-text" data-hi="इलेक्ट्रॉनिक्स (Electronics & Mobile)" data-en="Electronics & Mobile">इलेक्ट्रॉनिक्स (Electronics & Mobile)</option>
+                        <option value="grocery" class="lang-text" data-hi="किराना (Grocery & Supermarket)" data-en="Grocery & Supermarket">किराना (Grocery & Supermarket)</option>
+                        <option value="furniture" class="lang-text" data-hi="फर्नीचर (Furniture & Decor)" data-en="Furniture & Decor">फर्नीचर (Furniture & Decor)</option>
+                        <option value="footwear" class="lang-text" data-hi="जूते-चप्पल (Footwear)" data-en="Footwear">जूते-चप्पल (Footwear)</option>
+                        <option value="pharmacy" class="lang-text" data-hi="मेडिकल/फार्मेसी (Pharmacy)" data-en="Pharmacy">मेडिकल/फार्मेसी (Pharmacy)</option>
+                        <option value="books" class="lang-text" data-hi="किताबें (Books & Stationery)" data-en="Books & Stationery">किताबें (Books & Stationery)</option>
+                        <option value="hardware" class="lang-text" data-hi="हार्डवेयर (Hardware & Tools)" data-en="Hardware & Tools">हार्डवेयर (Hardware & Tools)</option>
+                        <option value="general" class="lang-text" data-hi="अन्य (General Store)" data-en="Other (General Store)">अन्य (General Store)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="lang-text" data-hi="पासवर्ड:" data-en="Password:">पासवर्ड:</label>
+                    <input type="password" name="password" required>
+                </div>
+                <button type="submit" class="lang-text" data-hi="साइन-अप करें" data-en="Sign Up">साइन-अप करें</button>
+            </form>
+            <div class="toggle-link">
+                <span class="lang-text" data-hi="पहले से अकाउंट है?" data-en="Already have an account?">पहले से अकाउंट है?</span> <span onclick="toggleForms()" class="lang-text" data-hi="लॉगिन करें" data-en="Login" style="text-decoration: underline; cursor: pointer;">लॉगिन करें</span>
+            </div>
+        </div>
+
+        <script>
+            function toggleForms() {
+                document.getElementById('login-section').classList.toggle('hidden');
+                document.getElementById('signup-section').classList.toggle('hidden');
+            }
+        </script>
+    {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Global UI Scripts (Dark Mode, Language & Loader) -->
+    <script>
+        let isDarkMode = localStorage.getItem('darkMode') === 'true';
+        let currentLang = localStorage.getItem('shopLang') || 'hi';
+        
+        function updateUI() {
+            let darkModeBtn = document.getElementById('darkModeBtn');
+            let langBtn = document.getElementById('langBtn');
+            
+            if (isDarkMode) { 
+                document.body.classList.add('dark-mode'); 
+                if (darkModeBtn) darkModeBtn.innerText = '☀️ लाइट मोड / Light Mode'; 
+            } else { 
+                document.body.classList.remove('dark-mode'); 
+                if (darkModeBtn) darkModeBtn.innerText = '🌙 डार्क मोड / Dark Mode'; 
+            }
+            
+            document.querySelectorAll('.lang-text').forEach(el => { el.innerHTML = el.getAttribute('data-' + currentLang) || el.innerHTML; });
+            
+            document.querySelectorAll('input, select').forEach(el => {
+                if (el.hasAttribute('data-hi-placeholder') && el.hasAttribute('data-en-placeholder')) {
+                    el.placeholder = el.getAttribute('data-' + currentLang + '-placeholder');
+                }
+            });
+            
+            if (langBtn) langBtn.innerText = currentLang === 'hi' ? '🌐 Switch to English' : '🌐 हिन्दी में बदलें';
+        }
+        function toggleDarkMode() { isDarkMode = !isDarkMode; localStorage.setItem('darkMode', isDarkMode); updateUI(); }
+        function toggleLanguage() { currentLang = currentLang === 'hi' ? 'en' : 'hi'; localStorage.setItem('shopLang', currentLang); updateUI(); }
+        
+        document.addEventListener("DOMContentLoaded", updateUI);
+        
+        document.addEventListener('submit', function() {
+            let loader = document.getElementById('global-loader');
+            if (loader) loader.style.display = 'flex';
+        });
+    </script>
+</body>
+</html>
