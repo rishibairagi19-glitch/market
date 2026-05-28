@@ -15,7 +15,7 @@ app = Flask(__name__, template_folder=base_dir, static_folder=base_dir)
 load_dotenv()
 
 # सेशन के लिए एक सीक्रेट की सेट करें (लॉगिन सुरक्षित रखने के लिए)
-app.secret_key = "my_super_secret_key"
+app.secret_key = os.getenv("SECRET_KEY", "my_super_secret_key")
 
 # Supabase क्रेडेंशियल्स सेट करें
 SUPABASE_URL = os.getenv("SUPABASE_URL")
@@ -126,9 +126,9 @@ def index():
             return redirect(url_for("index"))
                 
         elif action == "add_product":
-            if "shop_name" not in session:
+            shop_name = session.get("shop_name")
+            if not shop_name:
                 return redirect(url_for("index"))
-            shop_name = session["shop_name"]
             owner_name = session.get("owner_name", "Unknown")
             product = request.form.get("product")
             price = request.form.get("price")
@@ -145,18 +145,18 @@ def index():
                     base_name = os.path.splitext(filename)[0]
                     unique_filename = f"{random.randint(10000, 99999)}_{base_name}.webp"
                     
-                    # प्रोडक्ट इमेज का साइज कम (Compress) करने के लिए Pillow का उपयोग
-                    img = Image.open(image)
-                    if img.mode in ("RGBA", "P"):
-                        img = img.convert("RGB")
-                    img.thumbnail((600, 600))  # अधिकतम साइज 600x600 (फास्ट अपलोड के लिए)
-                    
-                    # इमेज को मेमोरी (BytesIO) में सेव करें
-                    img_byte_arr = io.BytesIO()
-                    img.save(img_byte_arr, format='WEBP', quality=60) # WebP: JPEG से 50% अधिक हल्का और फास्ट
-                    img_bytes = img_byte_arr.getvalue()
-                    
                     try:
+                        # प्रोडक्ट इमेज का साइज कम (Compress) करने के लिए Pillow का उपयोग
+                        img = Image.open(image)
+                        if img.mode in ("RGBA", "P"):
+                            img = img.convert("RGB")
+                        img.thumbnail((600, 600))  # अधिकतम साइज 600x600 (फास्ट अपलोड के लिए)
+                        
+                        # इमेज को मेमोरी (BytesIO) में सेव करें
+                        img_byte_arr = io.BytesIO()
+                        img.save(img_byte_arr, format='WEBP', quality=60) # WebP: JPEG से 50% अधिक हल्का और फास्ट
+                        img_bytes = img_byte_arr.getvalue()
+                        
                         # Supabase Storage में अपलोड करें (बकेट: img-market)
                         supabase.storage.from_("img-market").upload(
                             file=img_bytes,
@@ -167,7 +167,8 @@ def index():
                         public_url = supabase.storage.from_("img-market").get_public_url(f"products/{unique_filename}")
                         image_paths.append(public_url)
                     except Exception as e:
-                        print(f"Error uploading image to Supabase: {e}")
+                        print(f"Error processing or uploading image: {e}")
+                        continue # अगर कोई करप्टेड इमेज हो तो उसे छोड़कर आगे बढ़ें
             
             image_url_string = ",".join(image_paths) # सभी इमेज URL को कॉमा से जोड़ दें
 
@@ -204,15 +205,21 @@ def index():
                 return render_template("index.html", error=error_msg)
 
         elif action == "delete_product":
+            shop_name = session.get("shop_name")
+            if not shop_name:
+                return redirect(url_for("index"))
             product_id = request.form.get("product_id")
             try:
-                supabase.table("shops").delete().eq("product_id", product_id).eq("shop_name", session["shop_name"]).execute()
+                supabase.table("shops").delete().eq("product_id", product_id).eq("shop_name", shop_name).execute()
                 success_msg = "<span class='lang-text' data-hi='प्रोडक्ट सफलतापूर्वक डिलीट हो गया!' data-en='Product deleted successfully!'>प्रोडक्ट सफलतापूर्वक डिलीट हो गया!</span>"
                 active_admin_tab = "manage_products_tab"
             except Exception as e:
                 return render_template("index.html", error=f"डिलीट करते समय एरर: {str(e)}")
 
         elif action == "edit_product":
+            shop_name = session.get("shop_name")
+            if not shop_name:
+                return redirect(url_for("index"))
             product_id = request.form.get("product_id")
             try:
                 supabase.table("shops").update({
@@ -221,23 +228,29 @@ def index():
                     "size": request.form.get("size"),
                     "product_category": request.form.get("product_category", "General"),
                     "quantity": request.form.get("quantity")
-                }).eq("product_id", product_id).eq("shop_name", session["shop_name"]).execute()
+                }).eq("product_id", product_id).eq("shop_name", shop_name).execute()
                 success_msg = "<span class='lang-text' data-hi='प्रोडक्ट सफलतापूर्वक अपडेट हो गया!' data-en='Product updated successfully!'>प्रोडक्ट सफलतापूर्वक अपडेट हो गया!</span>"
                 active_admin_tab = "manage_products_tab"
             except Exception as e:
                 return render_template("index.html", error=f"अपडेट करते समय एरर: {str(e)}")
                 
         elif action == "update_order":
+            shop_name = session.get("shop_name")
+            if not shop_name:
+                return redirect(url_for("index"))
             order_id = request.form.get("order_id")
             new_status = request.form.get("status")
             try:
-                supabase.table("orders").update({"status": new_status}).eq("id", order_id).eq("shop_name", session["shop_name"]).execute()
+                supabase.table("orders").update({"status": new_status}).eq("id", order_id).eq("shop_name", shop_name).execute()
                 success_msg = "<span class='lang-text' data-hi='ऑर्डर स्टेटस अपडेट हो गया!' data-en='Order status updated!'>ऑर्डर स्टेटस अपडेट हो गया!</span>"
                 active_admin_tab = "orders_tab"
             except Exception as e:
                 return render_template("index.html", error=f"ऑर्डर अपडेट करते समय एरर: {str(e)}")
                 
         elif action == "edit_profile":
+            shop_name = session.get("shop_name")
+            if not shop_name:
+                return redirect(url_for("index"))
             new_owner_name = request.form.get("owner_name", "").strip()
             new_mobile = request.form.get("mobile_number", "").strip()
             new_main_category = request.form.get("main_category")
@@ -248,7 +261,7 @@ def index():
             try:
                 # चेक करें कि नया मोबाइल नंबर किसी और दुकान का तो नहीं है
                 existing = supabase.table("shop_owners").select("shop_name").eq("mobile_number", new_mobile).execute()
-                if existing.data and existing.data[0]["shop_name"] != session["shop_name"]:
+                if existing.data and existing.data[0]["shop_name"] != shop_name:
                     return render_template("index.html", error="<span class='lang-text' data-hi='यह मोबाइल नंबर पहले से किसी और के पास रजिस्टर है!' data-en='This mobile number is registered with someone else!'>यह मोबाइल नंबर पहले से किसी और के पास रजिस्टर है!</span>", active_admin_tab="profile_tab")
                 
                 update_data = {
@@ -266,27 +279,27 @@ def index():
                     base_pic_name = os.path.splitext(pic_filename)[0]
                     unique_pic_name = f"profile_{random.randint(10000, 99999)}_{base_pic_name}.webp"
                     
-                    # प्रोफाइल फोटो को 1:1 (Square) में क्रॉप करें और साइज कम करें
-                    img = Image.open(profile_pic)
-                    width, height = img.size
-                    min_dim = min(width, height) # चौड़ाई या ऊँचाई में से जो कम हो, उसे चुनें
-                    
-                    left = (width - min_dim) / 2
-                    top = (height - min_dim) / 2
-                    right = (width + min_dim) / 2
-                    bottom = (height + min_dim) / 2
-                    img_cropped = img.crop((left, top, right, bottom)) # बीच से 1:1 क्रॉप करें
-                    
-                    if img_cropped.mode in ("RGBA", "P"):
-                        img_cropped = img_cropped.convert("RGB")
-                    img_cropped.thumbnail((300, 300)) # प्रोफाइल के लिए 300x300 बहुत है
-                    
-                    # इमेज को मेमोरी (BytesIO) में सेव करें
-                    img_byte_arr = io.BytesIO()
-                    img_cropped.save(img_byte_arr, format='WEBP', quality=70)
-                    img_bytes = img_byte_arr.getvalue()
-                    
                     try:
+                        # प्रोफाइल फोटो को 1:1 (Square) में क्रॉप करें और साइज कम करें
+                        img = Image.open(profile_pic)
+                        width, height = img.size
+                        min_dim = min(width, height) # चौड़ाई या ऊँचाई में से जो कम हो, उसे चुनें
+                        
+                        left = (width - min_dim) / 2
+                        top = (height - min_dim) / 2
+                        right = (width + min_dim) / 2
+                        bottom = (height + min_dim) / 2
+                        img_cropped = img.crop((left, top, right, bottom)) # बीच से 1:1 क्रॉप करें
+                        
+                        if img_cropped.mode in ("RGBA", "P"):
+                            img_cropped = img_cropped.convert("RGB")
+                        img_cropped.thumbnail((300, 300)) # प्रोफाइल के लिए 300x300 बहुत है
+                        
+                        # इमेज को मेमोरी (BytesIO) में सेव करें
+                        img_byte_arr = io.BytesIO()
+                        img_cropped.save(img_byte_arr, format='WEBP', quality=70)
+                        img_bytes = img_byte_arr.getvalue()
+                        
                         # Supabase Storage में अपलोड करें
                         supabase.storage.from_("img-market").upload(
                             file=img_bytes,
@@ -296,15 +309,15 @@ def index():
                         public_url = supabase.storage.from_("img-market").get_public_url(f"profiles/{unique_pic_name}")
                         update_data["profile_pic_url"] = public_url
                     except Exception as e:
-                        print(f"Error uploading profile pic to Supabase: {e}")
+                        print(f"Error processing or uploading profile pic: {e}")
                 
                 try:
-                    supabase.table("shop_owners").update(update_data).eq("shop_name", session["shop_name"]).execute()
+                    supabase.table("shop_owners").update(update_data).eq("shop_name", shop_name).execute()
                 except Exception as e:
                     # प्रोफाइल अपडेट में भी फॉलबैक लगाएँ
                     if "main_category" in str(e):
                         del update_data["main_category"]
-                        supabase.table("shop_owners").update(update_data).eq("shop_name", session["shop_name"]).execute()
+                        supabase.table("shop_owners").update(update_data).eq("shop_name", shop_name).execute()
                     else:
                         raise e
                 
