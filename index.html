@@ -154,6 +154,40 @@
         .cat-btn.active-cat { background: #1a202c; color: white; border-color: #1a202c; box-shadow: 0 4px 10px rgba(26, 32, 44, 0.2); }
         body.dark-mode .cat-btn { background: #1e293b; border-color: #334155; color: #cbd5e0; }
         body.dark-mode .cat-btn.active-cat { background: #38bdf8; color: #0f172a; border-color: #38bdf8; }
+         /* Premium Help Button & Modal CSS */
+        .premium-help-btn { position: fixed; bottom: 25px; left: 25px; width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%); color: white; display: flex; justify-content: center; align-items: center; font-size: 28px; cursor: pointer; box-shadow: 0 10px 25px rgba(139, 92, 246, 0.4); z-index: 1000; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); animation: float 3s ease-in-out infinite; }
+        .premium-help-btn:hover { transform: scale(1.1) translateY(-5px); box-shadow: 0 15px 30px rgba(139, 92, 246, 0.5); }
+        @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-8px); } 100% { transform: translateY(0px); } }
+
+        .help-modal-content { padding: 0 !important; overflow: hidden; background: #f8fafc !important; }
+        .help-header { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); padding: 35px 25px 25px; text-align: center; color: white; position: relative; border-bottom: 5px solid #3b82f6; }
+        .help-header h2 { color: white; margin: 0; font-size: 22px; font-weight: 800; letter-spacing: 0.5px; }
+        .help-header p { color: #94a3b8; font-size: 13px; margin-top: 8px; margin-bottom: 0; font-weight: 500; }
+        .help-icon-wrapper { width: 70px; height: 70px; background: rgba(255,255,255,0.1); border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 35px; margin: 0 auto 15px; border: 2px solid rgba(255,255,255,0.2); backdrop-filter: blur(5px); }
+        .help-body { padding: 25px; }
+        
+        .faq-container { display: flex; flex-direction: column; gap: 12px; }
+        .faq-item { background: white; border-radius: 14px; border: 1px solid #e2e8f0; overflow: hidden; transition: all 0.3s ease; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
+        .faq-item:hover { border-color: #cbd5e0; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+        .faq-question { width: 100%; text-align: left; padding: 18px 20px; background: transparent; border: none; font-size: 15px; font-weight: 700; color: #1e293b; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: background 0.2s; }
+        .faq-question:hover { background: #f8fafc; }
+        .faq-question::after { content: '+'; font-size: 22px; color: #64748b; font-weight: 400; transition: transform 0.3s; }
+        .faq-item.active .faq-question::after { transform: rotate(45deg); color: #3b82f6; }
+        .faq-item.active .faq-question { color: #3b82f6; border-bottom: 1px solid #f1f5f9; }
+        .faq-answer { display: none; padding: 18px 20px; font-size: 14px; color: #475569; line-height: 1.6; background: #f8fafc; border-top: 1px solid #f1f5f9; }
+        
+        .contact-admin-box { background: white; border-radius: 16px; padding: 20px; margin-top: 25px; text-align: center; border: 1px dashed #cbd5e0; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
+        .contact-admin-box h4 { margin: 0 0 10px 0; color: #1e293b; font-size: 16px; font-weight: 800; }
+        
+        body.dark-mode .help-modal-content { background: #0f172a !important; }
+        body.dark-mode .faq-item { background: #1e293b; border-color: #334155; }
+        body.dark-mode .faq-item:hover { border-color: #475569; }
+        body.dark-mode .faq-question { color: #f8fafc; }
+        body.dark-mode .faq-question:hover { background: #334155; }
+        body.dark-mode .faq-answer { background: #0f172a; color: #cbd5e0; border-top-color: #334155; }
+        body.dark-mode .contact-admin-box { background: #1e293b; border-color: #334155; }
+        body.dark-mode .contact-admin-box h4 { color: #f8fafc; }
+
 
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f7f6; margin: 0; padding: 20px; color: #333; }
         .container { max-width: 500px; margin: 40px auto; background: #fff; padding: 30px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
@@ -1506,39 +1540,45 @@
 
     <!-- Floating Help Button (लॉगिन से बाहर वालों के लिए) -->
     {% if not session.get('shop_name') and not is_shop_view %}
-    <div style="position: fixed; bottom: 20px; left: 20px; background: #3498db; color: white; padding: 12px 18px; border-radius: 50px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3); z-index: 1000; font-weight: bold; font-size: 14px; display: flex; align-items: center; gap: 8px;" onclick="contactSupport()">
-        <span>❓</span> <span class="lang-text" data-hi="सहायता" data-en="Help">सहायता</span>
+    <div class="premium-help-btn" onclick="contactSupport()" title="Need Help?">
+        <span style="font-size: 28px;">🎧</span>
     </div>
     {% endif %}
 
     <!-- Help & Support Modal -->
     <div id="helpModal" class="modal" style="z-index: 2500;">
-        <div class="modal-content" style="max-width: 500px; text-align: left;">
-            <span class="close-btn" onclick="closeHelpModal()">&times;</span>
-            <h2 class="lang-text" data-hi="❓ सहायता और सामान्य प्रश्न (FAQ)" data-en="❓ Help & FAQs" style="border-bottom: 2px solid #edf2f7; padding-bottom: 15px; text-align: left; margin-top: 0;">❓ सहायता और सामान्य प्रश्न (FAQ)</h2>
+        <div class="modal-content help-modal-content" style="max-width: 500px; text-align: left; border: none;">
+            <span class="close-btn" onclick="closeHelpModal()" style="position: absolute; top: 15px; right: 20px; z-index: 10; color: rgba(255,255,255,0.8); font-size: 32px; font-weight: 300;">&times;</span>
             
-            <div class="faq-container" style="margin-top: 15px;">
-                <div class="faq-item">
-                    <button type="button" class="faq-question lang-text" data-hi="🔹 नया प्रोडक्ट कैसे जोड़ें?" data-en="🔹 How to add a new product?" onclick="toggleFaq(this)">🔹 नया प्रोडक्ट कैसे जोड़ें?</button>
-                    <div class="faq-answer lang-text" data-hi="डैशबोर्ड में 'नया प्रोडक्ट जोड़ें' टैब पर जाएं, प्रोडक्ट की फोटो, नाम और कीमत भरें और सेव करें।" data-en="Go to 'Add New Product' tab in dashboard, fill in the details, upload photos, and save.">डैशबोर्ड में 'नया प्रोडक्ट जोड़ें' टैब पर जाएं, प्रोडक्ट की फोटो, नाम और कीमत भरें और सेव करें।</div>
-                </div>
-                <div class="faq-item">
-                    <button type="button" class="faq-question lang-text" data-hi="🔹 प्रोडक्ट को एडिट या डिलीट कैसे करें?" data-en="🔹 How to edit or delete a product?" onclick="toggleFaq(this)">🔹 प्रोडक्ट को एडिट या डिलीट कैसे करें?</button>
-                    <div class="faq-answer lang-text" data-hi="डैशबोर्ड के 'मैनेज प्रोडक्ट्स' सेक्शन में जाएं। वहाँ हर प्रोडक्ट के नीचे आपको एडिट (Edit) और डिलीट (Delete) के बटन मिल जाएंगे।" data-en="Go to 'Manage Products'. Click 'Edit' to update details or 'Delete' to remove the product.">डैशबोर्ड के 'मैनेज प्रोडक्ट्स' सेक्शन में जाएं। वहाँ हर प्रोडक्ट के नीचे आपको एडिट (Edit) और डिलीट (Delete) के बटन मिल जाएंगे।</div>
-                </div>
-                <div class="faq-item">
-                    <button type="button" class="faq-question lang-text" data-hi="🔹 ग्राहकों के ऑर्डर्स कहाँ दिखेंगे?" data-en="🔹 Where can I see customer orders?" onclick="toggleFaq(this)">🔹 ग्राहकों के ऑर्डर्स कहाँ दिखेंगे?</button>
-                    <div class="faq-answer lang-text" data-hi="जब भी कोई ग्राहक ऑर्डर करेगा, तो वह आपके 'मेरे ऑर्डर्स' (My Orders) टैब में सेव हो जाएगा, जहाँ से आप उसका स्टेटस अपडेट कर सकते हैं।" data-en="Whenever a customer places an order, it will appear in your 'My Orders' tab where you can update its status.">जब भी कोई ग्राहक ऑर्डर करेगा, तो वह आपके 'मेरे ऑर्डर्स' (My Orders) टैब में सेव हो जाएगा, जहाँ से आप उसका स्टेटस अपडेट कर सकते हैं।</div>
-                </div>
-                <div class="faq-item">
-                    <button type="button" class="faq-question lang-text" data-hi="🔹 मैं अपना पासवर्ड भूल गया हूँ, क्या करूँ?" data-en="🔹 I forgot my password. What to do?" onclick="toggleFaq(this)">🔹 मैं अपना पासवर्ड भूल गया हूँ, क्या करूँ?</button>
-                    <div class="faq-answer lang-text" data-hi="अपना पासवर्ड रीसेट करवाने के लिए कृपया नीचे दिए गए WhatsApp बटन पर क्लिक करके एडमिन (प्लेटफॉर्म ओनर) से संपर्क करें।" data-en="To reset your password, please contact the admin using the WhatsApp button below.">अपना पासवर्ड रीसेट करवाने के लिए कृपया नीचे दिए गए WhatsApp बटन पर क्लिक करके एडमिन (प्लेटफॉर्म ओनर) से संपर्क करें।</div>
-                </div>
+            <div class="help-header">
+                <div class="help-icon-wrapper">🎧</div>
+                <h2 class="lang-text" data-hi="हम आपकी कैसे मदद कर सकते हैं?" data-en="How can we help you?">हम आपकी कैसे मदद कर सकते हैं?</h2>
+                <p class="lang-text" data-hi="नीचे सामान्य प्रश्नों के उत्तर दिए गए हैं" data-en="Find answers to common questions below">नीचे सामान्य प्रश्नों के उत्तर दिए गए हैं</p>
             </div>
-
-            <div style="margin-top: 25px; padding-top: 15px; border-top: 1px solid #edf2f7; text-align: center;">
-                <p class="lang-text" data-hi="क्या आपको और मदद चाहिए?" data-en="Need more help?" style="color: #718096; font-size: 14px; margin-bottom: 10px;">क्या आपको और मदद चाहिए?</p>
-                <button type="button" onclick="openAdminWhatsApp()" class="whatsapp-btn lang-text" data-hi="💬 एडमिन को WhatsApp करें" data-en="💬 Contact Admin on WhatsApp" style="width: 100%; margin-top: 0; border: none;">💬 एडमिन को WhatsApp करें</button>
+            
+            <div class="help-body">
+                <div class="faq-container">
+                    <div class="faq-item">
+                        <button type="button" class="faq-question lang-text" data-hi="नया प्रोडक्ट कैसे जोड़ें?" data-en="How to add a new product?" onclick="toggleFaq(this)">नया प्रोडक्ट कैसे जोड़ें?</button>
+                        <div class="faq-answer lang-text" data-hi="डैशबोर्ड में 'नया प्रोडक्ट जोड़ें' टैब पर जाएं, प्रोडक्ट की फोटो, नाम और कीमत भरें और सेव करें।" data-en="Go to 'Add New Product' tab in dashboard, fill in the details, upload photos, and save.">डैशबोर्ड में 'नया प्रोडक्ट जोड़ें' टैब पर जाएं, प्रोडक्ट की फोटो, नाम और कीमत भरें और सेव करें।</div>
+                    </div>
+                    <div class="faq-item">
+                        <button type="button" class="faq-question lang-text" data-hi="प्रोडक्ट को एडिट या डिलीट कैसे करें?" data-en="How to edit or delete a product?" onclick="toggleFaq(this)">प्रोडक्ट को एडिट या डिलीट कैसे करें?</button>
+                        <div class="faq-answer lang-text" data-hi="डैशबोर्ड के 'मैनेज प्रोडक्ट्स' सेक्शन में जाएं। वहाँ हर प्रोडक्ट के नीचे आपको एडिट (Edit) और डिलीट (Delete) के बटन मिल जाएंगे।" data-en="Go to 'Manage Products'. Click 'Edit' to update details or 'Delete' to remove the product.">डैशबोर्ड के 'मैनेज प्रोडक्ट्स' सेक्शन में जाएं। वहाँ हर प्रोडक्ट के नीचे आपको एडिट (Edit) और डिलीट (Delete) के बटन मिल जाएंगे।</div>
+                    </div>
+                    <div class="faq-item">
+                        <button type="button" class="faq-question lang-text" data-hi="ग्राहकों के ऑर्डर्स कहाँ दिखेंगे?" data-en="Where can I see customer orders?" onclick="toggleFaq(this)">ग्राहकों के ऑर्डर्स कहाँ दिखेंगे?</button>
+                        <div class="faq-answer lang-text" data-hi="जब भी कोई ग्राहक ऑर्डर करेगा, तो वह आपके 'मेरे ऑर्डर्स' (My Orders) टैब में सेव हो जाएगा, जहाँ से आप उसका स्टेटस अपडेट कर सकते हैं।" data-en="Whenever a customer places an order, it will appear in your 'My Orders' tab where you can update its status.">जब भी कोई ग्राहक ऑर्डर करेगा, तो वह आपके 'मेरे ऑर्डर्स' (My Orders) टैब में सेव हो जाएगा, जहाँ से आप उसका स्टेटस अपडेट कर सकते हैं।</div>
+                    </div>
+                    <div class="faq-item">
+                        <button type="button" class="faq-question lang-text" data-hi="मैं अपना पासवर्ड भूल गया हूँ, क्या करूँ?" data-en="I forgot my password. What to do?" onclick="toggleFaq(this)">मैं अपना पासवर्ड भूल गया हूँ, क्या करूँ?</button>
+                        <div class="faq-answer lang-text" data-hi="अपना पासवर्ड रीसेट करवाने के लिए कृपया नीचे दिए गए WhatsApp बटन पर क्लिक करके एडमिन (प्लेटफॉर्म ओनर) से संपर्क करें।" data-en="To reset your password, please contact the admin using the WhatsApp button below.">अपना पासवर्ड रीसेट करवाने के लिए कृपया नीचे दिए गए WhatsApp बटन पर क्लिक करके एडमिन (प्लेटफॉर्म ओनर) से संपर्क करें।</div>
+                    </div>
+                </div>
+            <div class="contact-admin-box">
+                    <h4 class="lang-text" data-hi="क्या आपको और मदद चाहिए?" data-en="Need more help?">क्या आपको और मदद चाहिए?</h4>
+                    <button type="button" onclick="openAdminWhatsApp()" class="whatsapp-btn lang-text" data-hi="💬 WhatsApp सपोर्ट" data-en="💬 WhatsApp Support" style="width: 100%; border: none; font-size: 16px; padding: 14px; border-radius: 12px; box-shadow: 0 4px 15px rgba(37, 211, 102, 0.4);">💬 WhatsApp सपोर्ट</button>
+                </div>
             </div>
         </div>
     </div>
@@ -1706,9 +1746,20 @@
         }
         
         function toggleFaq(btn) {
+            const item = btn.parentElement;
             const answer = btn.nextElementSibling;
-            if (answer.style.display === "block") { answer.style.display = "none"; } 
-            else { answer.style.display = "block"; }
+            
+            // दूसरे खुले हुए सवालों को बंद करें
+            document.querySelectorAll('.faq-item').forEach(el => {
+                if (el !== item) {
+                    el.classList.remove('active');
+                    el.querySelector('.faq-answer').style.display = 'none';
+                }
+            });
+
+            // वर्तमान सवाल को खोलें/बंद करें
+            item.classList.toggle('active');
+            answer.style.display = item.classList.contains('active') ? 'block' : 'none';
         }
         
         function openAdminWhatsApp() {
