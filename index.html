@@ -166,7 +166,8 @@
         button { width: 100%; padding: 12px; background: #27ae60; color: #fff; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold; transition: 0.3s; margin-top: 10px; }
         button:hover { background: #219150; }
         .toggle-link { text-align: center; margin-top: 20px; font-size: 14px; }
-        .toggle-link span { color: #3498db; cursor: pointer; font-weight: bold; text-decoration: underline; }
+        .toggle-link span { font-weight: bold; }
+        .toggle-link span[onclick] { color: #3498db; cursor: pointer; text-decoration: underline; padding: 10px; display: inline-block; }
         .hidden { display: none; }
         
         .alert { padding: 15px; margin-bottom: 20px; border-radius: 5px; text-align: center; font-size: 14px; font-weight: bold; }
@@ -283,8 +284,6 @@
             <p class="lang-text" data-hi="बेहतरीन प्रोडक्ट्स पर शानदार ऑफर!" data-en="Amazing offers on best products!">बेहतरीन प्रोडक्ट्स पर शानदार ऑफर!</p>
         </div>
         <div class="promo-btn lang-text" data-hi="अभी देखें" data-en="Explore">अभी देखें</div>
-    </div>
-        </div>
     </div>
     
     <div class="category-filters" style="display: flex; gap: 10px; overflow-x: auto; padding: 10px 0; margin-bottom: 20px; max-width: 1100px; margin-left: auto; margin-right: auto;">
@@ -506,7 +505,7 @@
             document.getElementById('modalTitle').innerText = title;
             document.getElementById('modalPrice').innerText = '₹' + price;
               
-        let mrp = Math.round(parseFloat(price) * 1.15);
+        let mrp = Math.round((parseFloat(price) || 0) * 1.15);
         document.getElementById('modalMrp').innerText = 'M.R.P: ₹' + mrp;
         document.getElementById('randomRatingCount').innerText = Math.floor(Math.random() * 400) + 20;
         
@@ -1110,7 +1109,7 @@
                     </div>
                     
                     <div class="manage-product-actions">
-                        <button type="button" class="btn-modern-edit" onclick="openEditModal('{{ p.product_id }}', '{{ (p.product or '')|replace('\'', '\\\'')|e }}', '{{ p.price }}', '{{ (p.size or '')|replace('\'', '\\\'')|e }}', '{{ p.quantity }}')">✏️ एडिट</button>
+                        <button type="button" class="btn-modern-edit" onclick="openEditModal('{{ p.product_id }}', '{{ (p.product or '')|replace('\'', '\\\'')|e }}', '{{ p.price }}', '{{ (p.size or '')|replace('\'', '\\\'')|e }}', '{{ p.quantity }}', '{{ (p.product_category or 'General')|replace('\'', '\\\'')|e }}')">✏️ एडिट</button>
                         
                         <form method="POST" style="margin: 0; flex: 1; display: flex;" onsubmit="return confirm('क्या आप वाकई इस प्रोडक्ट को डिलीट करना चाहते हैं?');">
                             <input type="hidden" name="action" value="delete_product">
@@ -1487,10 +1486,18 @@
             function showLogin() {
                 document.getElementById('login-section').style.display = 'block';
                 document.getElementById('signup-section').style.display = 'none';
+            
+            let alertBox = document.querySelector('.alert');
+            if(alertBox) alertBox.style.display = 'none'; // एरर मैसेज छुपाएं
+            window.scrollTo({ top: 0, behavior: 'smooth' }); // पेज को टॉप पर लाएं
             }
             function showSignup() {
                 document.getElementById('login-section').style.display = 'none';
                 document.getElementById('signup-section').style.display = 'block';
+            
+            let alertBox = document.querySelector('.alert');
+            if(alertBox) alertBox.style.display = 'none';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
             }
         </script>
     {% endif %}
@@ -1666,7 +1673,16 @@
         
         document.addEventListener("DOMContentLoaded", function() { populateMainCategories(); updateUI(); });
         
-        document.addEventListener('submit', function() {
+        // एरर या सक्सेस मैसेज आने पर पेज को अपने आप ऊपर (Top) स्क्रॉल करें
+        document.addEventListener("DOMContentLoaded", function() {
+            const alertBox = document.querySelector('.alert');
+            if (alertBox) {
+                alertBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        });
+        
+        document.addEventListener('submit', function(e) {
+            if (e.defaultPrevented) return; // अगर फॉर्म सबमिट कैंसिल हो जाए (जैसे Delete रद्द करने पर), तो लोडर न दिखाएं
             let loader = document.getElementById('global-loader');
             if (loader) loader.style.display = 'flex';
         });
