@@ -350,6 +350,9 @@
                  data-quantity="{{ p.quantity }}" 
                  data-category="{{ (p.product_category or 'General')|e }}" 
                  data-product-id="{{ p.product_id }}" 
+                 data-description="{{ (p.description or '')|e }}" 
+                 data-warranty="{{ (p.warranty or '')|e }}" 
+                 data-replacement="{{ (p.replacement or '')|e }}" 
                  data-images="{{ p.image_url.replace('\\', '/') if p.image_url else '' }}" 
                  onclick="openProductModal(this)">
                  
@@ -429,11 +432,11 @@
                     </div>
                     <div style="text-align: center; flex: 1;">
                         <div style="font-size: 22px; margin-bottom: 5px;">🔄</div>
-                        <div style="font-size: 10px; color: #718096; font-weight: 700; line-height: 1.2;" class="lang-text" data-hi="7 दिन<br>रिप्लेसमेंट" data-en="7 Days<br>Replacement">7 Days<br>Replacement</div>
+                        <div id="modalReplacement" style="font-size: 10px; color: #718096; font-weight: 700; line-height: 1.2;">7 Days<br>Replacement</div>
                     </div>
                     <div style="text-align: center; flex: 1;">
                         <div style="font-size: 22px; margin-bottom: 5px;">🛡️</div>
-                        <div style="font-size: 10px; color: #718096; font-weight: 700; line-height: 1.2;" class="lang-text" data-hi="1 साल<br>वारंटी" data-en="1 Year<br>Warranty">1 Year<br>Warranty</div>
+                        <div id="modalWarranty" style="font-size: 10px; color: #718096; font-weight: 700; line-height: 1.2;">1 Year<br>Warranty</div>
                     </div>
                     <div style="text-align: center; flex: 1;">
                         <div style="font-size: 22px; margin-bottom: 5px;">🏆</div>
@@ -443,6 +446,10 @@
                 
                 <div style="margin-bottom: 20px;">
                     <table style="width: 100%; font-size: 14px; border-collapse: collapse;">
+                        <tr id="modalDescRow">
+                            <td style="padding: 5px 0; color: #718096; font-weight: 600; width: 35%; vertical-align: top;" class="lang-text" data-hi="विवरण (Desc):" data-en="Desc:">विवरण (Desc):</td>
+                            <td style="padding: 5px 0; font-weight: 600; font-size: 13px; line-height: 1.4;" id="modalDescription" class="card-title"></td>
+                        </tr>
                         <tr>
                             <td style="padding: 5px 0; color: #718096; font-weight: 600; width: 35%;" class="lang-text" data-hi="विवरण (Details):" data-en="Details:">विवरण (Details):</td>
                             <td style="padding: 5px 0; font-weight: 600;" id="modalSize" class="card-title"></td>
@@ -554,6 +561,20 @@
         let mrp = Math.round((parseFloat(price) || 0) * 1.15);
         document.getElementById('modalMrp').innerText = 'M.R.P: ₹' + mrp;
         document.getElementById('randomRatingCount').innerText = Math.floor(Math.random() * 400) + 20;
+        
+        const description = element.getAttribute('data-description');
+        const warranty = element.getAttribute('data-warranty') || (currentLang === 'hi' ? 'कोई वारंटी नहीं' : 'No Warranty');
+        const replacement = element.getAttribute('data-replacement') || (currentLang === 'hi' ? 'कोई रिप्लेसमेंट नहीं' : 'No Replacement');
+        
+        document.getElementById('modalWarranty').innerText = warranty;
+        document.getElementById('modalReplacement').innerText = replacement;
+        
+        if (description) {
+            document.getElementById('modalDescription').innerText = description;
+            document.getElementById('modalDescRow').style.display = 'table-row';
+        } else {
+            document.getElementById('modalDescRow').style.display = 'none';
+        }
         
         document.getElementById('modalSize').innerText = size || (currentLang === 'hi' ? 'कोई विवरण नहीं' : 'No details');
         const qtyElem = document.getElementById('modalQuantity');
@@ -889,6 +910,19 @@
             </div>
 
             <div class="form-group">
+                <label class="lang-text" data-hi="📝 प्रोडक्ट का विवरण (Description):" data-en="📝 Product Description:">📝 प्रोडक्ट का विवरण (Description):</label>
+                <textarea name="description" data-hi-placeholder="प्रोडक्ट के बारे में कुछ जानकारी..." data-en-placeholder="Some details about the product..." style="width: 100%; padding: 14px 15px; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 15px; box-sizing: border-box;"></textarea>
+            </div>
+            <div class="form-group">
+                <label class="lang-text" data-hi="🛡️ वारंटी (Warranty):" data-en="🛡️ Warranty:">🛡️ वारंटी (Warranty):</label>
+                <input type="text" name="warranty" data-hi-placeholder="जैसे: 1 Year, 6 Months (या खाली छोड़ें)" data-en-placeholder="e.g. 1 Year, 6 Months (or empty)">
+            </div>
+            <div class="form-group">
+                <label class="lang-text" data-hi="🔄 रिप्लेसमेंट (Replacement):" data-en="🔄 Replacement:">🔄 रिप्लेसमेंट (Replacement):</label>
+                <input type="text" name="replacement" data-hi-placeholder="जैसे: 7 Days, No Replacement (या खाली छोड़ें)" data-en-placeholder="e.g. 7 Days, No Replacement (or empty)">
+            </div>
+
+            <div class="form-group">
                 <label class="lang-text" data-hi="📸 प्रोडक्ट की फोटो (Image):" data-en="📸 Product Images:">📸 प्रोडक्ट की फोटो (Image):</label>
                 
                 <div id="multiImagePreviewContainer" style="display: flex; gap: 12px; overflow-x: auto; padding: 5px 0;">
@@ -1103,7 +1137,7 @@
                         <div class="stat-value" style="font-size: 18px; color: #ed8936;">👁️ {{ user_profile.views_count|default(0) }} <span class="lang-text" data-hi="बार देखा गया" data-en="Views">बार देखा गया</span></div>
                     </div>
                 </div>
-                <button class="profile-edit-btn lang-text" data-hi="✏️ प्रोफाइल एडिट करें" data-en="✏️ Edit Profile" onclick="openEditProfileModal('{{ (user_profile.owner_name or '')|replace('\'', '\\\'')|e }}', '{{ user_profile.mobile_number }}', '{{ user_profile.category }}')">✏️ प्रोफाइल एडिट करें</button>
+                <button class="profile-edit-btn lang-text" data-hi="✏️ प्रोफाइल एडिट करें" data-en="✏️ Edit Profile" onclick="openEditProfileModal('{{ (user_profile.owner_name or '')|replace('\'', '\\\'')|e }}', '{{ user_profile.mobile_number }}', '{{ user_profile.category }}', '{{ (session.get('shop_name', '') or '')|replace('\'', '\\\'')|e }}')">✏️ प्रोफाइल एडिट करें</button>
             </div>
         </div>
 
@@ -1155,7 +1189,7 @@
                     </div>
                     
                     <div class="manage-product-actions">
-                        <button type="button" class="btn-modern-edit" onclick="openEditModal('{{ p.product_id }}', '{{ (p.product or '')|replace('\'', '\\\'')|e }}', '{{ p.price }}', '{{ (p.size or '')|replace('\'', '\\\'')|e }}', '{{ p.quantity }}', '{{ (p.product_category or 'General')|replace('\'', '\\\'')|e }}')">✏️ एडिट</button>
+                        <button type="button" class="btn-modern-edit" onclick="openEditModal('{{ p.product_id }}', '{{ (p.product or '')|replace('\'', '\\\'')|e }}', '{{ p.price }}', '{{ (p.size or '')|replace('\'', '\\\'')|e }}', '{{ p.quantity }}', '{{ (p.product_category or 'General')|replace('\'', '\\\'')|e }}', '{{ (p.description or '')|replace('\n', '\\n')|replace('\r', '')|replace('\'', '\\\'')|e }}', '{{ (p.warranty or '')|replace('\'', '\\\'')|e }}', '{{ (p.replacement or '')|replace('\'', '\\\'')|e }}')">✏️ एडिट</button>
                         
                         <form method="POST" style="margin: 0; flex: 1; display: flex;" onsubmit="return confirm('क्या आप वाकई इस प्रोडक्ट को डिलीट करना चाहते हैं?');">
                             <input type="hidden" name="action" value="delete_product">
@@ -1263,6 +1297,10 @@
                     <input type="text" id="edit_profile_name" name="owner_name" required>
                 </div>
                 <div class="form-group">
+                    <label class="lang-text" data-hi="🏪 दुकान का नाम (Shop Name):" data-en="🏪 Shop Name:">🏪 दुकान का नाम (Shop Name):</label>
+                    <input type="text" id="edit_profile_shop_name" name="shop_name" required>
+                </div>
+                <div class="form-group">
                     <label class="lang-text" data-hi="📱 मोबाइल नंबर:" data-en="📱 Mobile Number:">📱 मोबाइल नंबर:</label>
                     <input type="text" id="edit_profile_mobile" name="mobile_number" pattern="[0-9]{10}" required>
                 </div>
@@ -1342,7 +1380,7 @@
             }
         }
         
-        function openEditModal(id, name, price, size, quantity, category) {
+        function openEditModal(id, name, price, size, quantity, category, description, warranty, replacement) {
             document.getElementById('edit_product_id').value = id;
             document.getElementById('edit_product').value = name;
             document.getElementById('edit_price').value = price;
@@ -1350,6 +1388,10 @@
             document.getElementById('edit_quantity').value = quantity;
             const catInput = document.getElementById('edit_category');
             if(catInput) { catInput.value = category || 'General'; }
+            
+            document.getElementById('edit_description').value = description || '';
+            document.getElementById('edit_warranty').value = warranty || '';
+            document.getElementById('edit_replacement').value = replacement || '';
             document.getElementById('editProductModal').style.display = 'block';
         }
         
@@ -1357,8 +1399,9 @@
             document.getElementById('editProductModal').style.display = 'none';
         }
         
-        function openEditProfileModal(name, mobile, category) {
+        function openEditProfileModal(name, mobile, category, shopName) {
             document.getElementById('edit_profile_name').value = name;
+            document.getElementById('edit_profile_shop_name').value = shopName;
             document.getElementById('edit_profile_mobile').value = mobile;
             
             // Find Main Category and Update Sub Categories
@@ -1591,6 +1634,18 @@
                     <h4 class="lang-text" data-hi="क्या आपको और मदद चाहिए?" data-en="Need more help?">क्या आपको और मदद चाहिए?</h4>
                     <button type="button" onclick="openAdminWhatsApp()" class="whatsapp-btn lang-text" data-hi="💬 WhatsApp सपोर्ट" data-en="💬 WhatsApp Support" style="width: 100%; border: none; font-size: 16px; padding: 14px; border-radius: 12px; box-shadow: 0 4px 15px rgba(37, 211, 102, 0.4);">💬 WhatsApp सपोर्ट</button>
                 </div>
+                <div class="form-group">
+                    <label class="lang-text" data-hi="📝 विवरण (Description):" data-en="📝 Description:">📝 विवरण (Description):</label>
+                    <textarea id="edit_description" name="description" style="width: 100%; padding: 14px 15px; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 15px; box-sizing: border-box;"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="lang-text" data-hi="🛡️ वारंटी:" data-en="🛡️ Warranty:">🛡️ वारंटी:</label>
+                    <input type="text" id="edit_warranty" name="warranty">
+                </div>
+                <div class="form-group">
+                    <label class="lang-text" data-hi="🔄 रिप्लेसमेंट:" data-en="🔄 Replacement:">🔄 रिप्लेसमेंट:</label>
+                    <input type="text" id="edit_replacement" name="replacement">
+                </div>
             </div>
         </div>
     </div>
@@ -1598,7 +1653,7 @@
     <!-- Global UI Scripts (Dark Mode, Language & Loader) -->
     <script>
         let isDarkMode = localStorage.getItem('darkMode') === 'true';
-        let currentLang = localStorage.getItem('shopLang') || 'hi';
+        let currentLang = localStorage.getItem('shopLang') || 'en';
         
         // Categories JSON Data
         const shopCategories = {
