@@ -194,6 +194,9 @@ def index():
                     "price": price,
                     "size": size,
                     "quantity": quantity,
+                    "description": request.form.get("description", ""),
+                    "warranty": request.form.get("warranty", ""),
+                    "replacement": request.form.get("replacement", ""),
                     "image_url": image_url_string,
                     "qr_code_url": qr_url
                 }).execute()
@@ -227,7 +230,10 @@ def index():
                     "price": request.form.get("price"),
                     "size": request.form.get("size"),
                     "product_category": request.form.get("product_category", "General"),
-                    "quantity": request.form.get("quantity")
+                    "quantity": request.form.get("quantity"),
+                    "description": request.form.get("description", ""),
+                    "warranty": request.form.get("warranty", ""),
+                    "replacement": request.form.get("replacement", "")
                 }).eq("product_id", product_id).eq("shop_name", shop_name).execute()
                 success_msg = "<span class='lang-text' data-hi='प्रोडक्ट सफलतापूर्वक अपडेट हो गया!' data-en='Product updated successfully!'>प्रोडक्ट सफलतापूर्वक अपडेट हो गया!</span>"
                 active_admin_tab = "manage_products_tab"
@@ -252,6 +258,7 @@ def index():
             if not shop_name:
                 return redirect(url_for("index"))
             new_owner_name = request.form.get("owner_name", "").strip()
+            new_shop_name = request.form.get("shop_name", "").strip()
             new_mobile = request.form.get("mobile_number", "").strip()
             new_main_category = request.form.get("main_category")
             new_category = request.form.get("category")
@@ -264,8 +271,15 @@ def index():
                 if existing.data and existing.data[0]["shop_name"] != shop_name:
                     return render_template("index.html", error="<span class='lang-text' data-hi='यह मोबाइल नंबर पहले से किसी और के पास रजिस्टर है!' data-en='This mobile number is registered with someone else!'>यह मोबाइल नंबर पहले से किसी और के पास रजिस्टर है!</span>", active_admin_tab="profile_tab")
                 
+                # चेक करें कि नया दुकान का नाम पहले से किसी ने ले तो नहीं लिया
+                if new_shop_name and new_shop_name != shop_name:
+                    existing_shop = supabase.table("shop_owners").select("shop_name").eq("shop_name", new_shop_name).execute()
+                    if existing_shop.data:
+                        return render_template("index.html", error="<span class='lang-text' data-hi='यह दुकान का नाम पहले से किसी ने ले लिया है!' data-en='This shop name is already taken!'>यह दुकान का नाम पहले से किसी ने ले लिया है!</span>", active_admin_tab="profile_tab")
+
                 update_data = {
                     "owner_name": new_owner_name,
+                    "shop_name": new_shop_name if new_shop_name else shop_name,
                     "mobile_number": new_mobile,
                     "main_category": new_main_category,
                     "category": new_category
@@ -313,6 +327,13 @@ def index():
                 
                 try:
                     supabase.table("shop_owners").update(update_data).eq("shop_name", shop_name).execute()
+                    
+                    # अगर दुकान का नाम बदला गया है, तो Products और Orders टेबल में भी अपडेट करें
+                    if new_shop_name and new_shop_name != shop_name:
+                        supabase.table("shops").update({"shop_name": new_shop_name}).eq("shop_name", shop_name).execute()
+                        supabase.table("orders").update({"shop_name": new_shop_name}).eq("shop_name", shop_name).execute()
+                        session["shop_name"] = new_shop_name
+                        shop_name = new_shop_name
                 except Exception as e:
                     # प्रोफाइल अपडेट में भी फॉलबैक लगाएँ
                     if "main_category" in str(e):
