@@ -332,11 +332,13 @@
         <div class="promo-btn lang-text" data-hi="अभी देखें" data-en="Explore">अभी देखें</div>
     </div>
     
-    <div class="category-filters" style="display: flex; gap: 10px; overflow-x: auto; padding: 10px 0; margin-bottom: 20px; max-width: 1100px; margin-left: auto; margin-right: auto;">
-        <button class="cat-btn active-cat lang-text all-cat-btn" data-hi="सभी (All)" data-en="All Products" onclick="filterCategory('All')">सभी (All)</button>
-        {% for cat in product_categories %}
-        <button class="cat-btn" onclick="filterCategory('{{ cat|e }}')">{{ cat }}</button>
-        {% endfor %}
+    <div class="category-filters" style="margin-bottom: 20px; max-width: 1100px; margin-left: auto; margin-right: auto; text-align: center;">
+        <select class="search-input" style="width: auto; min-width: 200px; max-width: 90%; display: inline-block; padding: 10px 20px; border-radius: 100px; font-weight: bold; background: #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.05); cursor: pointer; text-align: center;" onchange="filterCategory(this.value)">
+            <option value="All" class="lang-text" data-hi="🛒 सभी प्रोडक्ट्स (All)" data-en="🛒 All Products">🛒 सभी प्रोडक्ट्स (All)</option>
+            {% for cat in product_categories %}
+            <option value="{{ cat|e }}">🏷️ {{ cat }}</option>
+            {% endfor %}
+        </select>
     </div>
 
     <div class="grid-container">
@@ -448,7 +450,9 @@
                     <table style="width: 100%; font-size: 14px; border-collapse: collapse;">
                         <tr id="modalDescRow">
                             <td style="padding: 5px 0; color: #718096; font-weight: 600; width: 35%; vertical-align: top;" class="lang-text" data-hi="विवरण (Desc):" data-en="Desc:">विवरण (Desc):</td>
-                            <td style="padding: 5px 0; font-weight: 600; font-size: 13px; line-height: 1.4;" id="modalDescription" class="card-title"></td>
+                            <td style="padding: 5px 0;">
+                                <div id="modalDescription" style="max-height: 120px; overflow-y: auto; font-weight: 600; font-size: 13px; line-height: 1.5; color: #2d3748; white-space: pre-wrap; padding-right: 5px;"></div>
+                            </td>
                         </tr>
                         <tr>
                             <td style="padding: 5px 0; color: #718096; font-weight: 600; width: 35%;" class="lang-text" data-hi="विवरण (Details):" data-en="Details:">विवरण (Details):</td>
@@ -784,13 +788,6 @@
         let activeCategory = 'All';
         function filterCategory(cat) {
             activeCategory = cat;
-            document.querySelectorAll('.cat-btn').forEach(btn => {
-                if ((cat === 'All' && btn.classList.contains('all-cat-btn')) || btn.getAttribute('onclick') === `filterCategory('${cat}')`) {
-                    btn.classList.add('active-cat');
-                } else {
-                    btn.classList.remove('active-cat');
-                }
-            });
             applyFilters();
         }
         
@@ -877,7 +874,24 @@
             
             <div class="form-group">
                 <label class="lang-text" data-hi="🏷️ प्रोडक्ट की केटेगरी (Category):" data-en="🏷️ Product Category:">🏷️ प्रोडक्ट की केटेगरी (Category):</label>
-                <input type="text" name="product_category" data-hi-placeholder="जैसे: T-Shirt, Mobile, Shoes" data-en-placeholder="e.g. T-Shirt, Mobile, Shoes" placeholder="जैसे: T-Shirt, Mobile, Shoes" required>
+                
+                {% set unique_cats = [] %}
+                {% for p in user_products %}
+                    {% if p.product_category and p.product_category not in unique_cats %}
+                        {% set _ = unique_cats.append(p.product_category) %}
+                    {% endif %}
+                {% endfor %}
+                
+                <select id="add_product_category" name="product_category" onchange="checkNewCategory(this, 'add_new_cat_input')" required>
+                    <option value="General">General</option>
+                    {% for cat in unique_cats %}
+                        {% if cat != 'General' %}
+                        <option value="{{ cat }}">{{ cat }}</option>
+                        {% endif %}
+                    {% endfor %}
+                    <option value="__NEW__" class="lang-text" data-hi="+ नई केटेगरी बनाएं" data-en="+ Create New Category" style="color: #3b82f6; font-weight: bold;">+ नई केटेगरी बनाएं</option>
+                </select>
+                <input type="text" id="add_new_cat_input" name="new_product_category" style="display:none; margin-top:10px;" data-hi-placeholder="नई केटेगरी का नाम लिखें" data-en-placeholder="Enter new category name">
             </div>
             
             <div class="form-group">
@@ -1257,7 +1271,16 @@
                 </div>
                 <div class="form-group">
                     <label class="lang-text" data-hi="🏷️ प्रोडक्ट की केटेगरी:" data-en="🏷️ Product Category:">🏷️ प्रोडक्ट की केटेगरी:</label>
-                    <input type="text" id="edit_category" name="product_category" required>
+                    <select id="edit_category" name="product_category" onchange="checkNewCategory(this, 'edit_new_cat_input')" required>
+                        <option value="General">General</option>
+                        {% for cat in unique_cats %}
+                            {% if cat != 'General' %}
+                            <option value="{{ cat }}">{{ cat }}</option>
+                            {% endif %}
+                        {% endfor %}
+                        <option value="__NEW__" class="lang-text" data-hi="+ नई केटेगरी बनाएं" data-en="+ Create New Category" style="color: #3b82f6; font-weight: bold;">+ नई केटेगरी बनाएं</option>
+                    </select>
+                    <input type="text" id="edit_new_cat_input" name="new_product_category" style="display:none; margin-top:10px;" data-hi-placeholder="नई केटेगरी का नाम लिखें" data-en-placeholder="Enter new category name">
                 </div>
                 <div class="form-group">
                     <label class="lang-text" data-hi="💰 कीमत (Price - ₹):" data-en="💰 Price (₹):">💰 कीमत (Price - ₹):</label>
@@ -1387,12 +1410,41 @@
             document.getElementById('edit_size').value = size;
             document.getElementById('edit_quantity').value = quantity;
             const catInput = document.getElementById('edit_category');
-            if(catInput) { catInput.value = category || 'General'; }
+            const newCatInput = document.getElementById('edit_new_cat_input');
+            if(catInput) {
+                let exists = Array.from(catInput.options).some(opt => opt.value === category);
+                if(exists) {
+                    catInput.value = category || 'General';
+                    if(newCatInput) {
+                        newCatInput.style.display = 'none';
+                        newCatInput.removeAttribute('required');
+                    }
+                } else {
+                    catInput.value = '__NEW__';
+                    if(newCatInput) {
+                        newCatInput.style.display = 'block';
+                        newCatInput.value = category;
+                        newCatInput.setAttribute('required', 'required');
+                    }
+                }
+            }
             
             document.getElementById('edit_description').value = description || '';
             document.getElementById('edit_warranty').value = warranty || '';
             document.getElementById('edit_replacement').value = replacement || '';
             document.getElementById('editProductModal').style.display = 'block';
+        }
+        
+        function checkNewCategory(selectObj, inputId) {
+            let inputField = document.getElementById(inputId);
+            if (selectObj.value === '__NEW__') {
+                inputField.style.display = 'block';
+                inputField.setAttribute('required', 'required');
+            } else {
+                inputField.style.display = 'none';
+                inputField.removeAttribute('required');
+                inputField.value = '';
+            }
         }
         
         function closeEditModal() {
@@ -1634,6 +1686,19 @@
                     <h4 class="lang-text" data-hi="क्या आपको और मदद चाहिए?" data-en="Need more help?">क्या आपको और मदद चाहिए?</h4>
                     <button type="button" onclick="openAdminWhatsApp()" class="whatsapp-btn lang-text" data-hi="💬 WhatsApp सपोर्ट" data-en="💬 WhatsApp Support" style="width: 100%; border: none; font-size: 16px; padding: 14px; border-radius: 12px; box-shadow: 0 4px 15px rgba(37, 211, 102, 0.4);">💬 WhatsApp सपोर्ट</button>
                 </div>
+                <div class="form-group">
+                    <label class="lang-text" data-hi="📝 विवरण (Description):" data-en="📝 Description:">📝 विवरण (Description):</label>
+                    <textarea id="edit_description" name="description" style="width: 100%; padding: 14px 15px; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 15px; box-sizing: border-box;"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="lang-text" data-hi="🛡️ वारंटी:" data-en="🛡️ Warranty:">🛡️ वारंटी:</label>
+                    <input type="text" id="edit_warranty" name="warranty">
+                </div>
+                <div class="form-group">
+                    <label class="lang-text" data-hi="🔄 रिप्लेसमेंट:" data-en="🔄 Replacement:">🔄 रिप्लेसमेंट:</label>
+                    <input type="text" id="edit_replacement" name="replacement">
+                </div>
+                
                 <div class="form-group">
                     <label class="lang-text" data-hi="📝 विवरण (Description):" data-en="📝 Description:">📝 विवरण (Description):</label>
                     <textarea id="edit_description" name="description" style="width: 100%; padding: 14px 15px; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 15px; box-sizing: border-box;"></textarea>
