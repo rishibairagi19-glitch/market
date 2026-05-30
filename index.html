@@ -329,7 +329,7 @@
             <h3 class="lang-text" data-hi="सुपर धमाका सेल 🚀" data-en="Super Mega Sale 🚀">सुपर धमाका सेल 🚀</h3>
             <p class="lang-text" data-hi="बेहतरीन प्रोडक्ट्स पर शानदार ऑफर!" data-en="Amazing offers on best products!">बेहतरीन प्रोडक्ट्स पर शानदार ऑफर!</p>
         </div>
-        <div class="promo-btn lang-text" data-hi="अभी देखें" data-en="Explore">अभी देखें</div>
+        <div class="promo-btn lang-text" data-hi="अभी देखें" data-en="Explore" onclick="document.getElementById('searchInput').focus();">अभी देखें</div>
     </div>
     
     <div class="category-filters" style="margin-bottom: 20px; max-width: 1100px; margin-left: auto; margin-right: auto; text-align: center;">
@@ -361,6 +361,8 @@
                 {% if images %}
                 {% set first_img = images[0].replace('\\', '/') %}
                 <img src="{% if first_img.startswith('http') %}{{ first_img }}{% else %}/{{ first_img }}{% endif %}" alt="{{ p.product }}" loading="lazy" decoding="async">
+                {% else %}
+                <div style="width: 100%; height: 160px; background: #f8fafc; display: flex; align-items: center; justify-content: center; font-size: 40px; border-bottom: 1px solid #edf2f7; border-radius: 12px 12px 0 0;">🛍️</div>
                 {% endif %}
                 
                 {% if p.price and p.price|float > 0 %}
@@ -623,7 +625,8 @@
                     }
                 }
             } else {
-                mainImg.style.display = 'none';
+                mainImg.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="300"><rect width="100%" height="100%" fill="%23f8fafc"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="50">🛍️</text></svg>';
+                mainImg.style.display = 'block';
             }
 
             // WhatsApp Message Link
@@ -661,6 +664,12 @@
             }
         }
 
+        function sanitizeHTML(str) {
+            let temp = document.createElement('div');
+            temp.textContent = str;
+            return temp.innerHTML;
+        }
+
         function addToCart(title, price, size, id, event) {
             if(event) event.stopPropagation(); // कार्ड पर क्लिक होने से रोके
             
@@ -668,7 +677,7 @@
             if(existingItem) {
                 existingItem.qty += 1;
             } else {
-                cart.push({ title: title, price: parseFloat(price), size: size, id: id, qty: 1 });
+                cart.push({ title: title, price: parseFloat(price) || 0, size: size, id: id, qty: 1 });
             }
             updateCartUI();
             
@@ -696,7 +705,7 @@
                 cartItems.innerHTML += `
                     <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding: 10px 0;">
                         <div style="flex-grow: 1;">
-                            <b>${item.title}</b><br>
+                            <b>${sanitizeHTML(item.title)}</b><br>
                             <small>${item.size} | ₹${item.price} | <span class="lang-text" data-hi="ID:" data-en="ID:">ID:</span> ${item.id || 'N/A'}</small>
                         </div>
                         <div style="display: flex; align-items: center; gap: 10px;">
@@ -772,10 +781,14 @@
             fetch('/api/place_order', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ shop_name: '{{ shop_name }}', customer_name: custName, customer_mobile: custMobile, order_details: orderDetailsArr.join(', '), total_amount: total })
+                body: JSON.stringify({ shop_name: {{ shop_name|tojson|safe if shop_name else '""' }}, customer_name: custName, customer_mobile: custMobile, order_details: orderDetailsArr.join(', '), total_amount: total })
             }).then(res => res.json()).then(data => {
             if (!data.success) {
                 alert(currentLang === 'hi' ? 'डेटाबेस में ऑर्डर सेव नहीं हो सका। Error: ' + data.error : 'Failed to save order to DB. Error: ' + data.error);
+            } else {
+                cart = [];
+                updateCartUI();
+                closeCartModal();
             }
                 window.open(waLink, '_blank');
             }).catch(err => {
@@ -792,7 +805,8 @@
         }
         
         function applyFilters() {
-            let input = document.getElementById('searchInput').value.toLowerCase();
+            let searchInput = document.getElementById('searchInput');
+            let input = searchInput ? searchInput.value.toLowerCase() : '';
             let cards = document.getElementsByClassName('card');
             for (let i = 0; i < cards.length; i++) {
                 let title = cards[i].getAttribute('data-title').toLowerCase();
@@ -813,7 +827,7 @@
             let titleText = currentLang === 'hi' ? 'हमारी दुकान से बेहतरीन प्रोडक्ट्स खरीदें!' : 'Buy the best products from our shop!';
             let promptText = currentLang === 'hi' ? 'इस लिंक को कॉपी करके शेयर करें:' : 'Copy this link to share:';
             if (navigator.share) {
-                navigator.share({ title: '{{ shop_name }}', text: titleText, url: window.location.href }).catch(err => console.log('Error sharing', err));
+                navigator.share({ title: {{ shop_name|tojson|safe if shop_name else '""' }}, text: titleText, url: window.location.href }).catch(err => console.log('Error sharing', err));
             } else { prompt(promptText, window.location.href); }
         }
     </script>
@@ -857,8 +871,8 @@
         </div>
         
         <div style="display: flex; gap: 15px; margin-bottom: 10px;">
-            <a href="/shop/{{ session.get('shop_name', '') }}" target="_blank" style="flex: 1; background: #3b82f6; color: white; text-align: center; padding: 14px; border-radius: 12px; text-decoration: none; font-weight: bold; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3); transition: 0.3s;" class="lang-text" data-hi="👁️ दुकान देखें" data-en="👁️ View Shop">👁️ दुकान देखें</a>
-            <button onclick="shareAdminShop('{{ request.host_url }}shop/{{ session.get('shop_name', '') }}', '{{ session.get('shop_name', '') }}')" style="flex: 1; background: #10b981; color: white; border: none; padding: 14px; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 15px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3); transition: 0.3s;" class="lang-text" data-hi="📤 शेयर करें" data-en="📤 Share">📤 शेयर करें</button>
+            <a href="/shop/{{ session.get('shop_name', '')|urlencode }}" target="_blank" style="flex: 1; background: #3b82f6; color: white; text-align: center; padding: 14px; border-radius: 12px; text-decoration: none; font-weight: bold; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3); transition: 0.3s;" class="lang-text" data-hi="👁️ दुकान देखें" data-en="👁️ View Shop">👁️ दुकान देखें</a>
+            <button onclick="shareAdminShop('{{ request.host_url }}shop/{{ session.get('shop_name', '')|urlencode }}', {{ session.get('shop_name', '')|tojson|safe }})" style="flex: 1; background: #10b981; color: white; border: none; padding: 14px; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 15px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3); transition: 0.3s;" class="lang-text" data-hi="📤 शेयर करें" data-en="📤 Share">📤 शेयर करें</button>
         </div>
     </div>
     
@@ -896,7 +910,7 @@
             
             <div class="form-group">
                 <label class="lang-text" data-hi="💰 कीमत (Price - ₹):" data-en="💰 Price (₹):">💰 कीमत (Price - ₹):</label>
-                <input type="number" name="price" data-hi-placeholder="कीमत" data-en-placeholder="Price" required>
+                <input type="number" name="price" step="any" data-hi-placeholder="कीमत" data-en-placeholder="Price" required>
             </div>
 
             <div class="form-group">
@@ -956,7 +970,7 @@
         </form>
     </div>
     <div style="text-align: center; margin-top: 15px;">
-        <a href="/shop/{{ session.get('shop_name', '') }}" target="_blank" style="color: #3498db; text-decoration: none;" class="lang-text" data-hi="अपनी पब्लिक शॉप देखें 👁️" data-en="View your public shop 👁️">अपनी पब्लिक शॉप देखें 👁️</a>
+        <a href="/shop/{{ session.get('shop_name', '')|urlencode }}" target="_blank" style="color: #3498db; text-decoration: none;" class="lang-text" data-hi="अपनी पब्लिक शॉप देखें 👁️" data-en="View your public shop 👁️">अपनी पब्लिक शॉप देखें 👁️</a>
     </div>
     
     <script>
@@ -1162,8 +1176,8 @@
                 <div style="font-size: 30px; margin-bottom: 10px;">🔗</div>
                 <h4 style="margin-top: 0; color: #2c3e50;" class="lang-text" data-hi="दुकान का लिंक" data-en="Shop Link">दुकान का लिंक</h4>
                 <p style="font-size: 13px; color: #7f8c8d;" class="lang-text" data-hi="ग्राहकों के साथ शेयर करें" data-en="Share with customers">ग्राहकों के साथ शेयर करें</p>
-                <input type="text" value="{{ request.host_url }}shop/{{ session.get('shop_name', '') }}" readonly style="width: 100%; text-align: center; background: #f4f7f6; margin-bottom: 15px; border: 1px dashed #ccc; padding: 8px; font-size: 12px; color: #555;">
-                <a href="/shop/{{ session.get('shop_name', '') }}" target="_blank" style="display: inline-block; background: #3498db; color: white; padding: 8px 15px; text-decoration: none; border-radius: 5px; font-size: 14px; font-weight: bold; width: auto;" class="lang-text" data-hi="दुकान खोलें" data-en="Open Shop">दुकान खोलें</a>
+                <input type="text" value="{{ request.host_url }}shop/{{ session.get('shop_name', '')|urlencode }}" readonly style="width: 100%; text-align: center; background: #f4f7f6; margin-bottom: 15px; border: 1px dashed #ccc; padding: 8px; font-size: 12px; color: #555;">
+                <a href="/shop/{{ session.get('shop_name', '')|urlencode }}" target="_blank" style="display: inline-block; background: #3498db; color: white; padding: 8px 15px; text-decoration: none; border-radius: 5px; font-size: 14px; font-weight: bold; width: auto;" class="lang-text" data-hi="दुकान खोलें" data-en="Open Shop">दुकान खोलें</a>
             </div>
 
             <!-- QR कोड कार्ड -->
@@ -1284,7 +1298,7 @@
                 </div>
                 <div class="form-group">
                     <label class="lang-text" data-hi="💰 कीमत (Price - ₹):" data-en="💰 Price (₹):">💰 कीमत (Price - ₹):</label>
-                    <input type="number" id="edit_price" name="price" required>
+                    <input type="number" id="edit_price" name="price" step="any" required>
                 </div>
                 <div class="form-group">
                     <label class="lang-text" data-hi="📏 विवरण / साइज:" data-en="📏 Details / Size:">📏 विवरण / साइज:</label>
@@ -1846,6 +1860,10 @@
         // Auto Capitalize First Letter of Each Word (Backend Data Save के लिए)
         document.addEventListener('focusout', function(e) {
             if (e.target.tagName === 'INPUT' && e.target.type === 'text') {
+                const id = e.target.id.toLowerCase();
+                const name = e.target.name.toLowerCase();
+                if(id.includes('mobile') || name.includes('mobile') || id.includes('login') || name.includes('login') || id.includes('shop_name') || name.includes('shop_name')) return;
+                
                 e.target.value = e.target.value.replace(/\b\w/g, function(char) {
                     return char.toUpperCase();
                 });
