@@ -139,7 +139,9 @@ def index():
             
             # अगर यूजर ने 'नई केटेगरी' चुनी है, तो नए इनपुट बॉक्स का डाटा लें
             if product_category == "__NEW__":
-                product_category = request.form.get("new_product_category", "General").strip()
+                product_category = request.form.get("new_product_category", "General").strip().title()
+            else:
+                product_category = product_category.title()
         
             # 1. एक से ज़्यादा इमेज अपलोड हैंडल करना (Multiple Images)
             images = request.files.getlist("product_image")
@@ -235,7 +237,9 @@ def index():
                 product_category = request.form.get("product_category", "General")
                 
                 if product_category == "__NEW__":
-                    product_category = request.form.get("new_product_category", "General").strip()
+                    product_category = request.form.get("new_product_category", "General").strip().title()
+                else:
+                    product_category = product_category.title()
                     
                 supabase.table("shops").update({
                     "product": request.form.get("product"),
@@ -378,6 +382,10 @@ def index():
             
         prod_res = supabase.table("shops").select("*").eq("shop_name", shop_name).execute()
         user_products = prod_res.data
+        if user_products:
+            for p in user_products:
+                p["product_category"] = (p.get("product_category") or "General").title()
+
         prof_res = supabase.table("shop_owners").select("*").eq("shop_name", shop_name).execute()
         if prof_res.data:
             user_profile = prof_res.data[0]
@@ -423,6 +431,9 @@ def view_shop(shop_name):
     # Supabase से इस दुकान के प्रोडक्ट्स लाएं
     response = supabase.table("shops").select("*").eq("shop_name", shop_name).execute()
     products = response.data
+    if products:
+        for p in products:
+            p["product_category"] = (p.get("product_category") or "General").title()
     
     # प्रोडक्ट्स की यूनीक केटेगरी निकालें
     product_categories = sorted(list(set([p.get("product_category") or "General" for p in products])))
