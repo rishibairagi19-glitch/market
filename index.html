@@ -1298,7 +1298,7 @@
                 </div>
                 <div class="form-group">
                     <label class="lang-text" data-hi="🏪 दुकान का नाम (Shop Name):" data-en="🏪 Shop Name:">🏪 दुकान का नाम (Shop Name):</label>
-                    <input type="text" id="edit_profile_shop_name" name="shop_name" required>
+                    <input type="text" id="edit_profile_shop_name" name="shop_name" oninput="this.value = this.value.replace(/\s+/g, '-')" required>
                 </div>
                 <div class="form-group">
                     <label class="lang-text" data-hi="📱 मोबाइल नंबर:" data-en="📱 Mobile Number:">📱 मोबाइल नंबर:</label>
@@ -1544,7 +1544,7 @@
                 </div>
                 <div class="form-group">
                     <label class="lang-text" data-hi="दुकान का नाम (बिना स्पेस के):" data-en="Shop Name (No spaces):">दुकान का नाम (बिना स्पेस के):</label>
-                    <input type="text" name="shop_name" required>
+                    <input type="text" name="shop_name" oninput="this.value = this.value.replace(/\s+/g, '-')" required>
                 </div>
                 <div class="form-group">
                     <label class="lang-text" data-hi="मोबाइल नंबर:" data-en="Mobile Number:">मोबाइल नंबर:</label>
