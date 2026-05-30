@@ -5,6 +5,7 @@ import os
 import io
 import random
 import traceback
+import urllib.parse
 from PIL import Image
 from dotenv import load_dotenv
 
@@ -44,7 +45,7 @@ def index():
         
         if action == "signup":
             owner_name = request.form.get("owner_name", "").strip()
-            shop_name = request.form.get("shop_name", "").strip()
+            shop_name = request.form.get("shop_name", "").strip().replace(" ", "-")
             mobile_number = request.form.get("mobile_number", "").strip()
             password = request.form.get("password")
             main_category = request.form.get("main_category")
@@ -174,8 +175,10 @@ def index():
 
             try:
                 # 2. दुकान के लिए QR कोड (API के जरिए)
-                shop_url = f"{request.host_url}shop/{shop_name}"
-                qr_url = f"https://api.qrserver.com/v1/create-qr-code/?size=150x150&data={shop_url}"
+                safe_shop_name = urllib.parse.quote(shop_name)
+                shop_url = f"{request.host_url}shop/{safe_shop_name}"
+                safe_shop_url = urllib.parse.quote(shop_url, safe=':/?=&')
+                qr_url = f"https://api.qrserver.com/v1/create-qr-code/?size=150x150&data={safe_shop_url}"
 
                 # 3. प्रोडक्ट के लिए यूनिक ID बनाएं
                 while True:
@@ -258,7 +261,7 @@ def index():
             if not shop_name:
                 return redirect(url_for("index"))
             new_owner_name = request.form.get("owner_name", "").strip()
-            new_shop_name = request.form.get("shop_name", "").strip()
+            new_shop_name = request.form.get("shop_name", "").strip().replace(" ", "-")
             new_mobile = request.form.get("mobile_number", "").strip()
             new_main_category = request.form.get("main_category")
             new_category = request.form.get("category")
@@ -359,8 +362,10 @@ def index():
         shop_name = session["shop_name"]
         
         # QR कोड (API के जरिए)
-        shop_url = f"{request.host_url}shop/{shop_name}"
-        qr_url = f"https://api.qrserver.com/v1/create-qr-code/?size=150x150&data={shop_url}"
+        safe_shop_name = urllib.parse.quote(shop_name)
+        shop_url = f"{request.host_url}shop/{safe_shop_name}"
+        safe_shop_url = urllib.parse.quote(shop_url, safe=':/?=&')
+        qr_url = f"https://api.qrserver.com/v1/create-qr-code/?size=150x150&data={safe_shop_url}"
             
         prod_res = supabase.table("shops").select("*").eq("shop_name", shop_name).execute()
         user_products = prod_res.data
