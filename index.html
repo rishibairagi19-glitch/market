@@ -1295,6 +1295,19 @@
                     <input type="number" id="edit_quantity" name="quantity" required>
                 </div>
                 
+                <div class="form-group">
+                    <label class="lang-text" data-hi="📝 विवरण (Description):" data-en="📝 Description:">📝 विवरण (Description):</label>
+                    <textarea id="edit_description" name="description" style="width: 100%; padding: 14px 15px; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 15px; box-sizing: border-box;"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="lang-text" data-hi="🛡️ वारंटी:" data-en="🛡️ Warranty:">🛡️ वारंटी:</label>
+                    <input type="text" id="edit_warranty" name="warranty">
+                </div>
+                <div class="form-group">
+                    <label class="lang-text" data-hi="🔄 रिप्लेसमेंट:" data-en="🔄 Replacement:">🔄 रिप्लेसमेंट:</label>
+                    <input type="text" id="edit_replacement" name="replacement">
+                </div>
+                
                 <div style="display: flex; gap: 10px; margin-top: 15px;">
                     <button type="submit" class="save-profile-btn lang-text" data-hi="💾 अपडेट करें" data-en="💾 Update" style="margin: 0; flex: 2; width: auto;">💾 अपडेट करें</button>
                     <button type="button" onclick="closeEditModal()" class="cancel-profile-btn lang-text" data-hi="रद्द करें" data-en="Cancel" style="margin: 0; flex: 1; width: auto;">रद्द करें</button>
@@ -1332,31 +1345,14 @@
                     <input type="password" name="password" data-hi-placeholder="नया पासवर्ड (बदलना हो तभी भरें)" data-en-placeholder="New password (if changing)">
                 </div>
                 <div class="form-group">
-                    <label class="lang-text" data-hi="️ दुकान की केटेगरी:" data-en="🏷️ Shop Category:">🏷️ दुकान की केटेगरी:</label>
+                    <label class="lang-text" data-hi="🏢 व्यवसाय का क्षेत्र (Business Field):" data-en="🏢 Business Field:">🏢 व्यवसाय का क्षेत्र (Business Field):</label>
+                    <select id="edit_main_cat" name="main_category" onchange="updateSubCats('edit_main_cat', 'edit_profile_category')" required></select>
+                </div>
+                <div class="form-group">
+                    <label class="lang-text" data-hi="🏷️ दुकान का प्रकार (Shop Category):" data-en="🏷️ Shop Category:">🏷️ दुकान का प्रकार (Shop Category):</label>
                     <select id="edit_profile_category" name="category" required>
-                        <option value="clothing" class="lang-text" data-hi="कपड़े (Clothing & Apparel)" data-en="Clothing & Apparel">कपड़े (Clothing & Apparel)</option>
-                        <option value="electronics" class="lang-text" data-hi="इलेक्ट्रॉनिक्स (Electronics & Mobile)" data-en="Electronics & Mobile">इलेक्ट्रॉनिक्स (Electronics & Mobile)</option>
-                        <option value="grocery" class="lang-text" data-hi="किराना (Grocery & Supermarket)" data-en="Grocery & Supermarket">किराना (Grocery & Supermarket)</option>
-                        <option value="furniture" class="lang-text" data-hi="फर्नीचर (Furniture & Decor)" data-en="Furniture & Decor">फर्नीचर (Furniture & Decor)</option>
-                        <option value="footwear" class="lang-text" data-hi="जूते-चप्पल (Footwear)" data-en="Footwear">जूते-चप्पल (Footwear)</option>
-                        <option value="pharmacy" class="lang-text" data-hi="मेडिकल/फार्मेसी (Pharmacy)" data-en="Pharmacy">मेडिकल/फार्मेसी (Pharmacy)</option>
-                        <option value="books" class="lang-text" data-hi="किताबें (Books & Stationery)" data-en="Books & Stationery">किताबें (Books & Stationery)</option>
-                        <option value="hardware" class="lang-text" data-hi="हार्डवेयर (Hardware & Tools)" data-en="Hardware & Tools">हार्डवेयर (Hardware & Tools)</option>
-                        <option value="general" class="lang-text" data-hi="अन्य (General Store)" data-en="Other (General Store)">अन्य (General Store)</option>
+                        <option value="" class="lang-text" data-hi="-- पहले क्षेत्र चुनें --" data-en="-- Select Field First --">-- पहले क्षेत्र चुनें --</option>
                     </select>
-                </div>
-                
-                <div class="form-group">
-                    <label class="lang-text" data-hi="📝 विवरण (Description):" data-en="📝 Description:">📝 विवरण (Description):</label>
-                    <textarea id="edit_description" name="description" style="width: 100%; padding: 14px 15px; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 15px; box-sizing: border-box;"></textarea>
-                </div>
-                <div class="form-group">
-                    <label class="lang-text" data-hi="🛡️ वारंटी:" data-en="🛡️ Warranty:">🛡️ वारंटी:</label>
-                    <input type="text" id="edit_warranty" name="warranty">
-                </div>
-                <div class="form-group">
-                    <label class="lang-text" data-hi="🔄 रिप्लेसमेंट:" data-en="🔄 Replacement:">🔄 रिप्लेसमेंट:</label>
-                    <input type="text" id="edit_replacement" name="replacement">
                 </div>
 
                 <div style="display: flex; gap: 10px; margin-top: 15px;">
