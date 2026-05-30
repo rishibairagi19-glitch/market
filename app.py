@@ -38,6 +38,7 @@ def logout():
 @app.route("/", methods=["GET", "POST"])
 def index():
     success_msg = None
+    error_msg = None
     active_admin_tab = "home_tab"
     active_tab = "login"
 
@@ -156,8 +157,8 @@ def index():
                     try:
                         # प्रोडक्ट इमेज का साइज कम (Compress) करने के लिए Pillow का उपयोग
                         img = Image.open(image)
-                        if img.mode in ("RGBA", "P"):
-                            img = img.convert("RGB")
+                        if img.mode == "P":
+                            img = img.convert("RGBA")
                         img.thumbnail((600, 600))  # अधिकतम साइज 600x600 (फास्ट अपलोड के लिए)
                         
                         # इमेज को मेमोरी (BytesIO) में सेव करें
@@ -211,11 +212,13 @@ def index():
                     "qr_code_url": qr_url
                 }).execute()
                 
-                success_msg = f"<span class='lang-text' data-hi='प्रोडक्ट सफलतापूर्वक सेव हो गया! आपकी शॉप का लिंक: <a href=\"/shop/{shop_name}\">{shop_url}</a> <br><br> QR कोड: <br><img src=\"{qr_url}\" width=\"150\">' data-en='Product saved successfully! Your shop link: <a href=\"/shop/{shop_name}\">{shop_url}</a> <br><br> QR Code: <br><img src=\"{qr_url}\" width=\"150\">'>प्रोडक्ट सफलतापूर्वक सेव हो गया! आपकी शॉप का लिंक: <a href='/shop/{shop_name}'>{shop_url}</a> <br><br> QR कोड: <br><img src='{qr_url}' width='150'></span>"
+                safe_shop_name_for_html = html.escape(shop_name)
+                safe_shop_url_for_html = html.escape(shop_url)
+                success_msg = f"<span class='lang-text' data-hi='प्रोडक्ट सफलतापूर्वक सेव हो गया! आपकी शॉप का लिंक: <a href=\"/shop/{safe_shop_name_for_html}\">{safe_shop_url_for_html}</a> <br><br> QR कोड: <br><img src=\"{qr_url}\" width=\"150\">' data-en='Product saved successfully! Your shop link: <a href=\"/shop/{safe_shop_name_for_html}\">{safe_shop_url_for_html}</a> <br><br> QR Code: <br><img src=\"{qr_url}\" width=\"150\">'>प्रोडक्ट सफलतापूर्वक सेव हो गया! आपकी शॉप का लिंक: <a href='/shop/{safe_shop_name_for_html}'>{safe_shop_url_for_html}</a> <br><br> QR कोड: <br><img src='{qr_url}' width='150'></span>"
                 active_admin_tab = "manage_products_tab"
             except Exception as e:
-                error_msg = f"<span class='lang-text' data-hi='प्रोडक्ट सेव करते समय डेटाबेस एरर: {html.escape(str(e))}' data-en='Database error while saving product: {html.escape(str(e))}'>प्रोडक्ट सेव करते समय डेटाबेस एरर: {html.escape(str(e))}</span>"
-                return render_template("index.html", error=error_msg)
+                error_msg = f"प्रोडक्ट सेव करते समय डेटाबेस एरर: {html.escape(str(e))}"
+                active_admin_tab = "add_product_tab"
 
         elif action == "delete_product":
             shop_name = session.get("shop_name")
@@ -227,7 +230,8 @@ def index():
                 success_msg = "<span class='lang-text' data-hi='प्रोडक्ट सफलतापूर्वक डिलीट हो गया!' data-en='Product deleted successfully!'>प्रोडक्ट सफलतापूर्वक डिलीट हो गया!</span>"
                 active_admin_tab = "manage_products_tab"
             except Exception as e:
-                return render_template("index.html", error=f"डिलीट करते समय एरर: {html.escape(str(e))}")
+                error_msg = f"डिलीट करते समय एरर: {html.escape(str(e))}"
+                active_admin_tab = "manage_products_tab"
 
         elif action == "edit_product":
             shop_name = session.get("shop_name")
@@ -255,7 +259,8 @@ def index():
                 success_msg = "<span class='lang-text' data-hi='प्रोडक्ट सफलतापूर्वक अपडेट हो गया!' data-en='Product updated successfully!'>प्रोडक्ट सफलतापूर्वक अपडेट हो गया!</span>"
                 active_admin_tab = "manage_products_tab"
             except Exception as e:
-                return render_template("index.html", error=f"अपडेट करते समय एरर: {html.escape(str(e))}")
+                error_msg = f"अपडेट करते समय एरर: {html.escape(str(e))}"
+                active_admin_tab = "manage_products_tab"
                 
         elif action == "update_order":
             shop_name = session.get("shop_name")
@@ -268,7 +273,8 @@ def index():
                 success_msg = "<span class='lang-text' data-hi='ऑर्डर स्टेटस अपडेट हो गया!' data-en='Order status updated!'>ऑर्डर स्टेटस अपडेट हो गया!</span>"
                 active_admin_tab = "orders_tab"
             except Exception as e:
-                return render_template("index.html", error=f"ऑर्डर अपडेट करते समय एरर: {html.escape(str(e))}")
+                error_msg = f"ऑर्डर अपडेट करते समय एरर: {html.escape(str(e))}"
+                active_admin_tab = "orders_tab"
                 
         elif action == "edit_profile":
             shop_name = session.get("shop_name")
@@ -286,89 +292,94 @@ def index():
                 # चेक करें कि नया मोबाइल नंबर किसी और दुकान का तो नहीं है
                 existing = supabase.table("shop_owners").select("shop_name").eq("mobile_number", new_mobile).execute()
                 if existing.data and existing.data[0]["shop_name"] != shop_name:
-                    return render_template("index.html", error="<span class='lang-text' data-hi='यह मोबाइल नंबर पहले से किसी और के पास रजिस्टर है!' data-en='This mobile number is registered with someone else!'>यह मोबाइल नंबर पहले से किसी और के पास रजिस्टर है!</span>", active_admin_tab="profile_tab")
+                    error_msg = "<span class='lang-text' data-hi='यह मोबाइल नंबर पहले से किसी और के पास रजिस्टर है!' data-en='This mobile number is registered with someone else!'>यह मोबाइल नंबर पहले से किसी और के पास रजिस्टर है!</span>"
+                    active_admin_tab = "profile_tab"
                 
-                # चेक करें कि नया दुकान का नाम पहले से किसी ने ले तो नहीं लिया
-                if new_shop_name and new_shop_name != shop_name:
-                    existing_shop = supabase.table("shop_owners").select("shop_name").eq("shop_name", new_shop_name).execute()
-                    if existing_shop.data:
-                        return render_template("index.html", error="<span class='lang-text' data-hi='यह दुकान का नाम पहले से किसी ने ले लिया है!' data-en='This shop name is already taken!'>यह दुकान का नाम पहले से किसी ने ले लिया है!</span>", active_admin_tab="profile_tab")
+                else:
+                    # चेक करें कि नया दुकान का नाम पहले से किसी ने ले तो नहीं लिया
+                    if new_shop_name and new_shop_name != shop_name:
+                        existing_shop = supabase.table("shop_owners").select("shop_name").eq("shop_name", new_shop_name).execute()
+                        if existing_shop.data:
+                            error_msg = "<span class='lang-text' data-hi='यह दुकान का नाम पहले से किसी ने ले लिया है!' data-en='This shop name is already taken!'>यह दुकान का नाम पहले से किसी ने ले लिया है!</span>"
+                            active_admin_tab = "profile_tab"
 
-                update_data = {
-                    "owner_name": new_owner_name,
-                    "shop_name": new_shop_name if new_shop_name else shop_name,
-                    "mobile_number": new_mobile,
-                    "main_category": new_main_category,
-                    "category": new_category
-                }
+                if not error_msg:
+                    update_data = {
+                        "owner_name": new_owner_name,
+                        "shop_name": new_shop_name if new_shop_name else shop_name,
+                        "mobile_number": new_mobile,
+                        "main_category": new_main_category,
+                        "category": new_category
+                    }
                 
-                if new_password:
-                    update_data["password"] = new_password
+                    if new_password:
+                        update_data["password"] = new_password
                 
-                if profile_pic and profile_pic.filename:
-                    pic_filename = secure_filename(profile_pic.filename)
-                    base_pic_name = os.path.splitext(pic_filename)[0]
-                    unique_pic_name = f"profile_{random.randint(10000, 99999)}_{base_pic_name}.webp"
+                    if profile_pic and profile_pic.filename:
+                        pic_filename = secure_filename(profile_pic.filename)
+                        base_pic_name = os.path.splitext(pic_filename)[0]
+                        unique_pic_name = f"profile_{random.randint(10000, 99999)}_{base_pic_name}.webp"
+                        
+                        try:
+                            # प्रोफाइल फोटो को 1:1 (Square) में क्रॉप करें और साइज कम करें
+                            img = Image.open(profile_pic)
+                            width, height = img.size
+                            min_dim = min(width, height) # चौड़ाई या ऊँचाई में से जो कम हो, उसे चुनें
+                            
+                            left = (width - min_dim) / 2
+                            top = (height - min_dim) / 2
+                            right = (width + min_dim) / 2
+                            bottom = (height + min_dim) / 2
+                            img_cropped = img.crop((left, top, right, bottom)) # बीच से 1:1 क्रॉप करें
+                            
+                            if img_cropped.mode == "P":
+                                img_cropped = img_cropped.convert("RGBA")
+                            img_cropped.thumbnail((300, 300)) # प्रोफाइल के लिए 300x300 बहुत है
+                            
+                            # इमेज को मेमोरी (BytesIO) में सेव करें
+                            img_byte_arr = io.BytesIO()
+                            img_cropped.save(img_byte_arr, format='WEBP', quality=70)
+                            img_bytes = img_byte_arr.getvalue()
+                            
+                            # Supabase Storage में अपलोड करें
+                            supabase.storage.from_("img-market").upload(
+                                file=img_bytes,
+                                path=f"profiles/{unique_pic_name}",
+                                file_options={"content-type": "image/webp"}
+                            )
+                            public_url = supabase.storage.from_("img-market").get_public_url(f"profiles/{unique_pic_name}")
+                            update_data["profile_pic_url"] = public_url
+                        except Exception as e:
+                            print(f"Error processing or uploading profile pic: {e}")
                     
                     try:
-                        # प्रोफाइल फोटो को 1:1 (Square) में क्रॉप करें और साइज कम करें
-                        img = Image.open(profile_pic)
-                        width, height = img.size
-                        min_dim = min(width, height) # चौड़ाई या ऊँचाई में से जो कम हो, उसे चुनें
-                        
-                        left = (width - min_dim) / 2
-                        top = (height - min_dim) / 2
-                        right = (width + min_dim) / 2
-                        bottom = (height + min_dim) / 2
-                        img_cropped = img.crop((left, top, right, bottom)) # बीच से 1:1 क्रॉप करें
-                        
-                        if img_cropped.mode in ("RGBA", "P"):
-                            img_cropped = img_cropped.convert("RGB")
-                        img_cropped.thumbnail((300, 300)) # प्रोफाइल के लिए 300x300 बहुत है
-                        
-                        # इमेज को मेमोरी (BytesIO) में सेव करें
-                        img_byte_arr = io.BytesIO()
-                        img_cropped.save(img_byte_arr, format='WEBP', quality=70)
-                        img_bytes = img_byte_arr.getvalue()
-                        
-                        # Supabase Storage में अपलोड करें
-                        supabase.storage.from_("img-market").upload(
-                            file=img_bytes,
-                            path=f"profiles/{unique_pic_name}",
-                            file_options={"content-type": "image/webp"}
-                        )
-                        public_url = supabase.storage.from_("img-market").get_public_url(f"profiles/{unique_pic_name}")
-                        update_data["profile_pic_url"] = public_url
-                    except Exception as e:
-                        print(f"Error processing or uploading profile pic: {e}")
-                
-                try:
-                    supabase.table("shop_owners").update(update_data).eq("shop_name", shop_name).execute()
-                    
-                    # अगर दुकान का नाम बदला गया है, तो Products और Orders टेबल में भी अपडेट करें
-                    if new_shop_name and new_shop_name != shop_name:
-                        safe_shop_url = urllib.parse.quote(f"{request.host_url}shop/{urllib.parse.quote(new_shop_name)}", safe=':/?=&')
-                        new_qr_url = f"https://api.qrserver.com/v1/create-qr-code/?size=150x150&data={safe_shop_url}"
-                        
-                        supabase.table("shops").update({"shop_name": new_shop_name, "qr_code_url": new_qr_url}).eq("shop_name", shop_name).execute()
-                        supabase.table("orders").update({"shop_name": new_shop_name}).eq("shop_name", shop_name).execute()
-                        session["shop_name"] = new_shop_name
-                        shop_name = new_shop_name
-                except Exception as e:
-                    # प्रोफाइल अपडेट में भी फॉलबैक लगाएँ
-                    if "main_category" in str(e):
-                        update_data.pop("main_category", None)
                         supabase.table("shop_owners").update(update_data).eq("shop_name", shop_name).execute()
-                    else:
-                        raise e
-                
-                session["owner_name"] = new_owner_name
-                session["main_category"] = new_main_category
-                session["category"] = new_category
-                success_msg = "<span class='lang-text' data-hi='प्रोफाइल सफलतापूर्वक अपडेट हो गई!' data-en='Profile updated successfully!'>प्रोफाइल सफलतापूर्वक अपडेट हो गई!</span>"
-                active_admin_tab = "profile_tab"
+                        
+                        # अगर दुकान का नाम बदला गया है, तो Products और Orders टेबल में भी अपडेट करें
+                        if new_shop_name and new_shop_name != shop_name:
+                            safe_shop_url = urllib.parse.quote(f"{request.host_url}shop/{urllib.parse.quote(new_shop_name)}", safe=':/?=&')
+                            new_qr_url = f"https://api.qrserver.com/v1/create-qr-code/?size=150x150&data={safe_shop_url}"
+                            
+                            supabase.table("shops").update({"shop_name": new_shop_name, "qr_code_url": new_qr_url}).eq("shop_name", shop_name).execute()
+                            supabase.table("orders").update({"shop_name": new_shop_name}).eq("shop_name", shop_name).execute()
+                            session["shop_name"] = new_shop_name
+                            shop_name = new_shop_name
+                    except Exception as e:
+                        # प्रोफाइल अपडेट में भी फॉलबैक लगाएँ
+                        if "main_category" in str(e):
+                            update_data.pop("main_category", None)
+                            supabase.table("shop_owners").update(update_data).eq("shop_name", shop_name).execute()
+                        else:
+                            raise e
+                    
+                    session["owner_name"] = new_owner_name
+                    session["main_category"] = new_main_category
+                    session["category"] = new_category
+                    success_msg = "<span class='lang-text' data-hi='प्रोफाइल सफलतापूर्वक अपडेट हो गई!' data-en='Profile updated successfully!'>प्रोफाइल सफलतापूर्वक अपडेट हो गई!</span>"
+                    active_admin_tab = "profile_tab"
             except Exception as e:
-                return render_template("index.html", error=f"प्रोफाइल अपडेट करते समय एरर: {html.escape(str(e))}", active_admin_tab="profile_tab")
+                error_msg = f"प्रोफाइल अपडेट करते समय एरर: {html.escape(str(e))}"
+                active_admin_tab = "profile_tab"
         
     # अगर यूज़र लॉगिन है तो उसकी प्रोफाइल और प्रोडक्ट डेटा लाएं
     user_products = []
@@ -400,7 +411,7 @@ def index():
         except Exception:
             pass # In case the orders table hasn't been created yet
             
-    return render_template("index.html", user_products=user_products, user_profile=user_profile, user_orders=user_orders, success=success_msg, active_admin_tab=active_admin_tab, active_tab=active_tab, qr_url=qr_url)
+    return render_template("index.html", user_products=user_products, user_profile=user_profile, user_orders=user_orders, success=success_msg, error=error_msg, active_admin_tab=active_admin_tab, active_tab=active_tab, qr_url=qr_url)
 
 @app.route("/api/place_order", methods=["POST"])
 def api_place_order():
