@@ -5,6 +5,7 @@ import os
 import io
 import random
 import traceback
+import html
 import urllib.parse
 from PIL import Image
 from dotenv import load_dotenv
@@ -91,9 +92,9 @@ def index():
                             "category": category
                         }).execute()
                     except Exception as fallback_e:
-                        return render_template("index.html", error=f"डेटाबेस एरर: {str(fallback_e)}", active_tab="signup")
+                        return render_template("index.html", error=f"डेटाबेस एरर: {html.escape(str(fallback_e))}", active_tab="signup")
                 else:
-                    return render_template("index.html", error=f"साइन-अप एरर: {str(e)}", active_tab="signup")
+                    return render_template("index.html", error=f"साइन-अप एरर: {html.escape(str(e))}", active_tab="signup")
             
             success_msg = f"<span class='lang-text' data-hi='साइन-अप सफल रहा! आपकी 7-डिजिट की शॉप ID <b>{shop_id}</b> है। आप इस ID या अपने मोबाइल नंबर से लॉगिन कर सकते हैं।' data-en='Sign-up successful! Your 7-digit Shop ID is <b>{shop_id}</b>. You can login using this ID or your mobile number.'>साइन-अप सफल रहा! आपकी 7-डिजिट की शॉप ID <b>{shop_id}</b> है। आप इस ID या अपने मोबाइल नंबर से लॉगिन कर सकते हैं।</span>"
             return render_template("index.html", success=success_msg, active_tab="login")
@@ -213,7 +214,7 @@ def index():
                 success_msg = f"<span class='lang-text' data-hi='प्रोडक्ट सफलतापूर्वक सेव हो गया! आपकी शॉप का लिंक: <a href=\"/shop/{shop_name}\">{shop_url}</a> <br><br> QR कोड: <br><img src=\"{qr_url}\" width=\"150\">' data-en='Product saved successfully! Your shop link: <a href=\"/shop/{shop_name}\">{shop_url}</a> <br><br> QR Code: <br><img src=\"{qr_url}\" width=\"150\">'>प्रोडक्ट सफलतापूर्वक सेव हो गया! आपकी शॉप का लिंक: <a href='/shop/{shop_name}'>{shop_url}</a> <br><br> QR कोड: <br><img src='{qr_url}' width='150'></span>"
                 active_admin_tab = "manage_products_tab"
             except Exception as e:
-                error_msg = f"<span class='lang-text' data-hi='प्रोडक्ट सेव करते समय डेटाबेस एरर: {str(e)}' data-en='Database error while saving product: {str(e)}'>प्रोडक्ट सेव करते समय डेटाबेस एरर: {str(e)}</span>"
+                error_msg = f"<span class='lang-text' data-hi='प्रोडक्ट सेव करते समय डेटाबेस एरर: {html.escape(str(e))}' data-en='Database error while saving product: {html.escape(str(e))}'>प्रोडक्ट सेव करते समय डेटाबेस एरर: {html.escape(str(e))}</span>"
                 return render_template("index.html", error=error_msg)
 
         elif action == "delete_product":
@@ -226,7 +227,7 @@ def index():
                 success_msg = "<span class='lang-text' data-hi='प्रोडक्ट सफलतापूर्वक डिलीट हो गया!' data-en='Product deleted successfully!'>प्रोडक्ट सफलतापूर्वक डिलीट हो गया!</span>"
                 active_admin_tab = "manage_products_tab"
             except Exception as e:
-                return render_template("index.html", error=f"डिलीट करते समय एरर: {str(e)}")
+                return render_template("index.html", error=f"डिलीट करते समय एरर: {html.escape(str(e))}")
 
         elif action == "edit_product":
             shop_name = session.get("shop_name")
@@ -254,7 +255,7 @@ def index():
                 success_msg = "<span class='lang-text' data-hi='प्रोडक्ट सफलतापूर्वक अपडेट हो गया!' data-en='Product updated successfully!'>प्रोडक्ट सफलतापूर्वक अपडेट हो गया!</span>"
                 active_admin_tab = "manage_products_tab"
             except Exception as e:
-                return render_template("index.html", error=f"अपडेट करते समय एरर: {str(e)}")
+                return render_template("index.html", error=f"अपडेट करते समय एरर: {html.escape(str(e))}")
                 
         elif action == "update_order":
             shop_name = session.get("shop_name")
@@ -267,7 +268,7 @@ def index():
                 success_msg = "<span class='lang-text' data-hi='ऑर्डर स्टेटस अपडेट हो गया!' data-en='Order status updated!'>ऑर्डर स्टेटस अपडेट हो गया!</span>"
                 active_admin_tab = "orders_tab"
             except Exception as e:
-                return render_template("index.html", error=f"ऑर्डर अपडेट करते समय एरर: {str(e)}")
+                return render_template("index.html", error=f"ऑर्डर अपडेट करते समय एरर: {html.escape(str(e))}")
                 
         elif action == "edit_profile":
             shop_name = session.get("shop_name")
@@ -346,14 +347,17 @@ def index():
                     
                     # अगर दुकान का नाम बदला गया है, तो Products और Orders टेबल में भी अपडेट करें
                     if new_shop_name and new_shop_name != shop_name:
-                        supabase.table("shops").update({"shop_name": new_shop_name}).eq("shop_name", shop_name).execute()
+                        safe_shop_url = urllib.parse.quote(f"{request.host_url}shop/{urllib.parse.quote(new_shop_name)}", safe=':/?=&')
+                        new_qr_url = f"https://api.qrserver.com/v1/create-qr-code/?size=150x150&data={safe_shop_url}"
+                        
+                        supabase.table("shops").update({"shop_name": new_shop_name, "qr_code_url": new_qr_url}).eq("shop_name", shop_name).execute()
                         supabase.table("orders").update({"shop_name": new_shop_name}).eq("shop_name", shop_name).execute()
                         session["shop_name"] = new_shop_name
                         shop_name = new_shop_name
                 except Exception as e:
                     # प्रोफाइल अपडेट में भी फॉलबैक लगाएँ
                     if "main_category" in str(e):
-                        del update_data["main_category"]
+                        update_data.pop("main_category", None)
                         supabase.table("shop_owners").update(update_data).eq("shop_name", shop_name).execute()
                     else:
                         raise e
@@ -364,7 +368,7 @@ def index():
                 success_msg = "<span class='lang-text' data-hi='प्रोफाइल सफलतापूर्वक अपडेट हो गई!' data-en='Profile updated successfully!'>प्रोफाइल सफलतापूर्वक अपडेट हो गई!</span>"
                 active_admin_tab = "profile_tab"
             except Exception as e:
-                return render_template("index.html", error=f"प्रोफाइल अपडेट करते समय एरर: {str(e)}", active_admin_tab="profile_tab")
+                return render_template("index.html", error=f"प्रोफाइल अपडेट करते समय एरर: {html.escape(str(e))}", active_admin_tab="profile_tab")
         
     # अगर यूज़र लॉगिन है तो उसकी प्रोफाइल और प्रोडक्ट डेटा लाएं
     user_products = []
@@ -400,7 +404,7 @@ def index():
 
 @app.route("/api/place_order", methods=["POST"])
 def api_place_order():
-    data = request.json
+    data = request.json or {}
     try:
         supabase.table("orders").insert({
             "shop_name": data.get("shop_name"),
@@ -419,6 +423,9 @@ def api_place_order():
 def view_shop(shop_name):
     # दुकान की केटेगरी लाएं ताकि ग्राहकों को सही लेबल दिखे
     owner_res = supabase.table("shop_owners").select("category", "mobile_number", "views_count").eq("shop_name", shop_name).execute()
+    
+    if not owner_res.data:
+        return f"<h2 style='text-align:center; margin-top:50px; font-family:sans-serif;'>दुकान '{html.escape(shop_name)}' नहीं मिली (Shop Not Found) 😕</h2><p style='text-align:center;'><a href='/'>होम पेज पर जाएं</a></p>", 404
     
     # दुकान के व्यूज़ (Views) बढ़ाएं
     if owner_res.data:
