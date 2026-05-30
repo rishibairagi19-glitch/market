@@ -136,6 +136,10 @@ def index():
             size = request.form.get("size")
             quantity = request.form.get("quantity")
             product_category = request.form.get("product_category", "General")
+            
+            # अगर यूजर ने 'नई केटेगरी' चुनी है, तो नए इनपुट बॉक्स का डाटा लें
+            if product_category == "__NEW__":
+                product_category = request.form.get("new_product_category", "General").strip()
         
             # 1. एक से ज़्यादा इमेज अपलोड हैंडल करना (Multiple Images)
             images = request.files.getlist("product_image")
@@ -228,11 +232,16 @@ def index():
                 return redirect(url_for("index"))
             product_id = request.form.get("product_id")
             try:
+                product_category = request.form.get("product_category", "General")
+                
+                if product_category == "__NEW__":
+                    product_category = request.form.get("new_product_category", "General").strip()
+                    
                 supabase.table("shops").update({
                     "product": request.form.get("product"),
                     "price": request.form.get("price"),
                     "size": request.form.get("size"),
-                    "product_category": request.form.get("product_category", "General"),
+                    "product_category": product_category,
                     "quantity": request.form.get("quantity"),
                     "description": request.form.get("description", ""),
                     "warranty": request.form.get("warranty", ""),
